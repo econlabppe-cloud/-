@@ -155,9 +155,9 @@
 
         const CAR_PACKAGES = {
             "none": { label: "ללא רכב (חופשי חודשי)", value: 226, isCar: false },
-            "level3": { label: "רכב אישי - רמה 3 (רגיל)", value: 1300, isCar: true, insurance: 550 },
-            "level3_service": { label: "רכב אישי - רמה ג' (תנאי שירות)", value: 1750, isCar: true, insurance: 550 },
-            "level4_service": { label: "רכב אישי - רמה ד' (תנאי שירות)", value: 2100, isCar: true, insurance: 550 }
+            "level3": { label: "רכב אישי - רמה ב' (תחילי)", value: 1345, isCar: true, insurance: 550 },
+            "level3_service": { label: "רכב אישי - רמה ג' (תנאי שירות)", value: 1551, isCar: true, insurance: 550 },
+            "level4_service": { label: "רכב אישי - רמה ד' (תנאי שירות)", value: 1726, isCar: true, insurance: 550 }
         };
 
         const Card = ({ children, className = "" }) => (
@@ -428,7 +428,7 @@
                 const pensionEmployer = pensionBase * 0.135;
                 const recoveryPay = 350;
                 const clothing = 125;
-                const gifts = 80;
+                const gifts = 100;
                 const insuranceRefundMonthly = carPackage.isCar ? (insuranceCost / 12) : 0;
                 
                 // Calculate total economic value based on toggles
