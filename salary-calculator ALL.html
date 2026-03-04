@@ -1,0 +1,2835 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>מחשבון שכר שירות המדינה</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800;900&display=swap');
+        body { font-family: 'Heebo', sans-serif; }
+        input[type="range"]::-webkit-slider-thumb {
+            appearance: none; width: 22px; height: 22px;
+            background: linear-gradient(135deg, #2563eb, #4f46e5);
+            cursor: pointer; border-radius: 50%;
+            box-shadow: 0 2px 8px rgba(59,130,246,0.5);
+        }
+        input[type="range"]::-moz-range-thumb {
+            width: 22px; height: 22px;
+            background: linear-gradient(135deg, #2563eb, #4f46e5);
+            cursor: pointer; border-radius: 50%; border: none;
+        }
+        .contract-btn { transition: all 0.2s ease; }
+        .contract-btn:hover { transform: translateY(-1px); }
+    </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useMemo } = React;
+
+// ============================================================
+// CONTRACT DATA — עדכון 01.01.2024
+// ============================================================
+// קבוצות לסינון
+const CONTRACT_GROUPS = {
+  "כלכלנים ואקדמאים":   ["551","514","14","87","587","187","987","402"],
+  "בכירים":              ["568","569","557","864"],
+  "מומחים":              ["555","964","164","965"],
+  "מנהל ומשק":           ["148","948","64","564","516","517"],
+  "צוערים":              ["287","554","787"],
+  "הגנת עדים":           ["331","332","333","334","335","336","337","338","339","340","310","320","635","636"],
+  "פנים וביטחון":        ["110","553","610","556","210","710","520","521","384","387","109","600"],
+  "ביטחון לאומי":        ["522","382","383"],
+  "טכנולוגיה מידע":     ["421","422","423","424","425","426","427"],
+  "גיור ורבנות":         ["491","492","493","494","495","496","497","286","315"],
+  "חקירות ומיוחדים":    ["168","167","343","123"],
+  "תעופה ותחבורה":       ["122","512","188","688"],
+  "מגוון":               ["134","195","204","264","265","266","165","166","561","588","525"],
+};
+
+const CONTRACTS = {
+  // ── אקדמאים וכלכלנים ──
+  "551": {
+    name: "כלכלנים נבחרים (חדש)",
+    shortName: "כלכלנים נבחרים",
+    number: "551",
+    color: "from-blue-600 to-indigo-700",
+    btnActive: "bg-gradient-to-br from-blue-600 to-indigo-700",
+    accent: "#2563eb",
+    pensionEmployee: 0.07, pensionEmployer: 0.135,
+    studyFundEmployee: 0.025, studyFundEmployer: 0.075,
+    grades: [
+      {id:"36",   label:"דרגה 36",   salary:7022.19},
+      {id:"36א",  label:"דרגה 36א",  salary:7547.66},
+      {id:"36ב",  label:"דרגה 36ב",  salary:8073.14},
+      {id:"37",   label:"דרגה 37",   salary:7583.97},
+      {id:"37א",  label:"דרגה 37א",  salary:8109.44},
+      {id:"37ב",  label:"דרגה 37ב",  salary:8634.92},
+      {id:"38",   label:"דרגה 38",   salary:8485.70},
+      {id:"38א",  label:"דרגה 38א",  salary:9011.18},
+      {id:"38ב",  label:"דרגה 38ב",  salary:9536.65},
+      {id:"39",   label:"דרגה 39",   salary:9249.42},
+      {id:"39א",  label:"דרגה 39א",  salary:9775.25},
+      {id:"39ב",  label:"דרגה 39ב",  salary:10301.09},
+      {id:"40",   label:"דרגה 40",   salary:10801.99},
+      {id:"40א",  label:"דרגה 40א",  salary:11327.82},
+      {id:"40ב",  label:"דרגה 40ב",  salary:11853.65},
+      {id:"41",   label:"דרגה 41",   salary:12629.60},
+      {id:"41א",  label:"דרגה 41א",  salary:13155.42},
+      {id:"41ב",  label:"דרגה 41ב",  salary:13681.26},
+      {id:"42",   label:"דרגה 42",   salary:13998.39},
+      {id:"42א",  label:"דרגה 42א",  salary:14524.20},
+      {id:"42ב",  label:"דרגה 42ב",  salary:15050.05},
+      {id:"43",   label:"דרגה 43",   salary:15516.47},
+      {id:"43א",  label:"דרגה 43א",  salary:16906.13},
+      {id:"43ב",  label:"דרגה 43ב",  salary:17431.98},
+      {id:"44",   label:"דרגה 44",   salary:17533.61},
+      {id:"44א",  label:"דרגה 44א",  salary:19103.92},
+      {id:"44ב",  label:"דרגה 44ב",  salary:19698.14},
+    ]
+  },
+  "587": {
+    name: "עובדים חיוניים אקדמאים",
+    shortName: "אקדמאים חיוניים",
+    number: "587",
+    color: "from-emerald-600 to-teal-700",
+    btnActive: "bg-gradient-to-br from-emerald-600 to-teal-700",
+    accent: "#059669",
+    pensionEmployee: 0.07, pensionEmployer: 0.135,
+    studyFundEmployee: 0.025, studyFundEmployer: 0.075,
+    grades: [
+      {id:"36",  label:"דרגה 36",  salary:5959.49},
+      {id:"36א", label:"דרגה 36א", salary:6524.80},
+      {id:"36ב", label:"דרגה 36ב", salary:7090.12},
+      {id:"37",  label:"דרגה 37",  salary:6100.48},
+      {id:"37א", label:"דרגה 37א", salary:6665.35},
+      {id:"37ב", label:"דרגה 37ב", salary:7230.19},
+      {id:"38",  label:"דרגה 38",  salary:6241.69},
+      {id:"38א", label:"דרגה 38א", salary:6806.55},
+      {id:"38ב", label:"דרגה 38ב", salary:7371.41},
+      {id:"39",  label:"דרגה 39",  salary:6665.17},
+      {id:"39א", label:"דרגה 39א", salary:7286.76},
+      {id:"39ב", label:"דרגה 39ב", salary:7908.37},
+      {id:"40",  label:"דרגה 40",  salary:7366.05},
+      {id:"40א", label:"דרגה 40א", salary:7987.61},
+      {id:"40ב", label:"דרגה 40ב", salary:8609.24},
+      {id:"41",  label:"דרגה 41",  salary:8185.29},
+      {id:"41א", label:"דרגה 41א", salary:8806.89},
+      {id:"41ב", label:"דרגה 41ב", salary:9428.52},
+      {id:"42",  label:"דרגה 42",  salary:9452.39},
+      {id:"42א", label:"דרגה 42א", salary:10073.97},
+      {id:"42ב", label:"דרגה 42ב", salary:10695.59},
+      {id:"43",  label:"דרגה 43",  salary:11058.97},
+      {id:"43א", label:"דרגה 43א", salary:11680.59},
+      {id:"43ב", label:"דרגה 43ב", salary:12302.17},
+      {id:"44",  label:"דרגה 44",  salary:12496.65},
+      {id:"44א", label:"דרגה 44א", salary:13199.06},
+      {id:"44ב", label:"דרגה 44ב", salary:13901.45},
+    ]
+  },
+  "568": {
+    name: "סגל בכיר מוביל",
+    shortName: "בכיר מוביל",
+    number: "568",
+    color: "from-purple-600 to-violet-700",
+    btnActive: "bg-gradient-to-br from-purple-600 to-violet-700",
+    accent: "#7c3aed",
+    pensionEmployee: 0.07, pensionEmployer: 0.135,
+    studyFundEmployee: 0.025, studyFundEmployer: 0.075,
+    grades: [
+      {id:"מ-א-0",  label:"משנה/קצוב 43-45 - ותק 0",   salary:35607.11},
+      {id:"מ-א-1",  label:"משנה/קצוב 43-45 - ותק 1",   salary:36146.61},
+      {id:"מ-א-2",  label:"משנה/קצוב 43-45 - ותק 2+",  salary:36686.12},
+      {id:"ב1-0",   label:"בכיר מוביל ב1 - ותק 0",     salary:32370.10},
+      {id:"ב1-1",   label:"בכיר מוביל ב1 - ותק 1",     salary:32909.60},
+      {id:"ב1-2",   label:"בכיר מוביל ב1 - ותק 2",     salary:33449.10},
+      {id:"ב1-3",   label:"בכיר מוביל ב1 - ותק 3",     salary:33988.61},
+      {id:"ב1-4",   label:"בכיר מוביל ב1 - ותק 4",     salary:34528.11},
+      {id:"ב1-5",   label:"בכיר מוביל ב1 - ותק 5",     salary:35067.61},
+      {id:"ב1-6+",  label:"בכיר מוביל ב1 - ותק 6+",    salary:35607.11},
+      {id:"ב2-0",   label:"בכיר מוביל ב2 - ותק 0",     salary:30212.09},
+      {id:"ב2-1",   label:"בכיר מוביל ב2 - ותק 1",     salary:30751.59},
+      {id:"ב2-2",   label:"בכיר מוביל ב2 - ותק 2",     salary:31291.10},
+      {id:"ב2-3",   label:"בכיר מוביל ב2 - ותק 3",     salary:31830.60},
+      {id:"ב2-4",   label:"בכיר מוביל ב2 - ותק 4",     salary:32370.10},
+      {id:"ב2-5",   label:"בכיר מוביל ב2 - ותק 5",     salary:32909.60},
+      {id:"ב2-6+",  label:"בכיר מוביל ב2 - ותק 6+",    salary:33449.10},
+      {id:"ב3-0",   label:"בכיר מוביל ב3 - ותק 0",     salary:28054.08},
+      {id:"ב3-1",   label:"בכיר מוביל ב3 - ותק 1",     salary:28593.59},
+      {id:"ב3-2",   label:"בכיר מוביל ב3 - ותק 2",     salary:29133.09},
+      {id:"ב3-3",   label:"בכיר מוביל ב3 - ותק 3",     salary:29672.59},
+      {id:"ב3-4",   label:"בכיר מוביל ב3 - ותק 4",     salary:30212.09},
+      {id:"ב3-5",   label:"בכיר מוביל ב3 - ותק 5",     salary:30751.59},
+      {id:"ב3-6+",  label:"בכיר מוביל ב3 - ותק 6+",    salary:31291.10},
+    ]
+  },
+  "569": {
+    name: "סגל בכיר שאינו מוביל",
+    shortName: "בכיר לא מוביל",
+    number: "569",
+    color: "from-slate-600 to-gray-700",
+    btnActive: "bg-gradient-to-br from-slate-600 to-gray-700",
+    accent: "#475569",
+    pensionEmployee: 0.07, pensionEmployer: 0.135,
+    studyFundEmployee: 0.025, studyFundEmployer: 0.075,
+    grades: [
+      {id:"ג1-0",  label:"בכיר שאינו מוביל ג1 - ותק 0",  salary:28054.08},
+      {id:"ג1-1",  label:"בכיר שאינו מוביל ג1 - ותק 1",  salary:28593.59},
+      {id:"ג1-2",  label:"בכיר שאינו מוביל ג1 - ותק 2",  salary:29133.09},
+      {id:"ג1-3",  label:"בכיר שאינו מוביל ג1 - ותק 3",  salary:29672.59},
+      {id:"ג1-4",  label:"בכיר שאינו מוביל ג1 - ותק 4",  salary:30212.09},
+      {id:"ג1-5",  label:"בכיר שאינו מוביל ג1 - ותק 5",  salary:30751.59},
+      {id:"ג1-6+", label:"בכיר שאינו מוביל ג1 - ותק 6+", salary:31291.10},
+      {id:"ג2-0",  label:"בכיר שאינו מוביל ג2 - ותק 0",  salary:23738.08},
+      {id:"ג2-1",  label:"בכיר שאינו מוביל ג2 - ותק 1",  salary:24277.58},
+      {id:"ג2-2",  label:"בכיר שאינו מוביל ג2 - ותק 2",  salary:24817.08},
+      {id:"ג2-3",  label:"בכיר שאינו מוביל ג2 - ותק 3",  salary:25356.58},
+      {id:"ג2-4",  label:"בכיר שאינו מוביל ג2 - ותק 4",  salary:25896.09},
+      {id:"ג2-5",  label:"בכיר שאינו מוביל ג2 - ותק 5",  salary:26435.59},
+      {id:"ג2-6",  label:"בכיר שאינו מוביל ג2 - ותק 6",  salary:26975.09},
+      {id:"ג2-7",  label:"בכיר שאינו מוביל ג2 - ותק 7",  salary:27514.59},
+      {id:"ג2-8+", label:"בכיר שאינו מוביל ג2 - ותק 8+", salary:28054.08},
+    ]
+  },
+  "287": {
+    name: "צוערים",
+    shortName: "צוערים",
+    number: "287",
+    color: "from-orange-500 to-amber-600",
+    btnActive: "bg-gradient-to-br from-orange-500 to-amber-600",
+    accent: "#ea580c",
+    pensionEmployee: 0.07, pensionEmployer: 0.135,
+    studyFundEmployee: 0.025, studyFundEmployer: 0.075,
+    grades: [
+      {id:"409", label:"צוער",         salary:6707.89},
+      {id:"410", label:"צוער ותיק",    salary:7338.49},
+      {id:"411", label:"צוע.א1",       salary:7162.61},
+      {id:"412", label:"צוע.א2",       salary:7617.32},
+      {id:"413", label:"צוע.ב1 ותיק", salary:7793.20},
+      {id:"414", label:"צוע.ב2 ותיק", salary:8247.91},
+    ]
+  },
+  "555": {
+    name: "מומחים (חדש)",
+    shortName: "מומחים",
+    number: "555",
+    color: "from-rose-600 to-pink-700",
+    btnActive: "bg-gradient-to-br from-rose-600 to-pink-700",
+    accent: "#e11d48",
+    pensionEmployee: 0.07, pensionEmployer: 0.135,
+    studyFundEmployee: 0.025, studyFundEmployer: 0.075,
+    grades: [
+      {id:"11",   label:"דרגה 11",           salary:9489.85},
+      {id:"12",   label:"דרגה 12",           salary:10048.08},
+      {id:"13",   label:"דרגה 13",           salary:10606.30},
+      {id:"14",   label:"דרגה 14",           salary:11164.53},
+      {id:"15",   label:"דרגה 15",           salary:11722.75},
+      {id:"16",   label:"דרגה 16",           salary:12280.98},
+      {id:"17",   label:"דרגה 17",           salary:12839.21},
+      {id:"18",   label:"דרגה 18",           salary:13397.44},
+      {id:"205",  label:"מנהל משימות",       salary:14513.89},
+      {id:"1",    label:"דרגה 1 (210)",      salary:15805.73},
+      {id:"2",    label:"דרגה 2 (220)",      salary:17070.18},
+      {id:"3",    label:"דרגה 3 (230)",      salary:18334.64},
+      {id:"240א", label:"דרגה א (240)",      salary:19406.13},
+      {id:"250ב", label:"דרגה ב (250)",      salary:20792.29},
+      {id:"260ג", label:"דרגה ג (260)",      salary:22178.44},
+      {id:"270ד", label:"דרגה ד (270)",      salary:23564.60},
+      {id:"280ה", label:"דרגה ה (280)",      salary:24950.75},
+      {id:"290ו", label:"דרגה ו (290)",      salary:26336.90},
+      {id:"300ז", label:"דרגה ז (300)",      salary:27723.05},
+    ]
+  },
+  "187": {
+    name: "עובדים חיוניים משפטנים",
+    shortName: "משפטנים חיוניים",
+    number: "187",
+    color: "from-cyan-600 to-sky-700",
+    btnActive: "bg-gradient-to-br from-cyan-600 to-sky-700",
+    accent: "#0891b2",
+    pensionEmployee: 0.07, pensionEmployer: 0.135,
+    studyFundEmployee: 0.025, studyFundEmployer: 0.075,
+    grades: [
+      {id:"300", label:"דרגה ג",   salary:7546.21},
+      {id:"301", label:"דרגה ג1",  salary:8091.86},
+      {id:"302", label:"דרגה ג2",  salary:8637.51},
+      {id:"312", label:"דרגה א",   salary:10187.30},
+      {id:"315", label:"דרגה א3",  salary:10740.05},
+      {id:"318", label:"דרגה א6",  salary:11292.79},
+      {id:"322", label:"דרגה א10", salary:11221.57},
+      {id:"325", label:"דרגה א13", salary:11774.32},
+      {id:"328", label:"דרגה א16", salary:12327.06},
+      {id:"332", label:"דרגה א20", salary:12564.08},
+      {id:"335", label:"דרגה א23", salary:13116.82},
+      {id:"338", label:"דרגה א26", salary:13669.56},
+      {id:"342", label:"דרגה א30", salary:14305.42},
+      {id:"345", label:"דרגה א33", salary:14858.16},
+      {id:"348", label:"דרגה א36", salary:15410.91},
+      {id:"352", label:"דרגה א40", salary:16324.34},
+      {id:"355", label:"דרגה א43", salary:16877.08},
+      {id:"358", label:"דרגה א46", salary:17429.82},
+      {id:"401", label:"דרגה א50", salary:18772.99},
+      {id:"403", label:"דרגה א53", salary:19408.65},
+      {id:"405", label:"דרגה א56", salary:20044.30},
+    ]
+  },
+  "164": {
+    name: "מומחים (ותיק)",
+    shortName: "מומחים ותיק",
+    number: "164",
+    color: "from-fuchsia-600 to-purple-700",
+    btnActive: "bg-gradient-to-br from-fuchsia-600 to-purple-700",
+    accent: "#a21caf",
+    pensionEmployee: 0.07, pensionEmployer: 0.135,
+    studyFundEmployee: 0.025, studyFundEmployer: 0.075,
+    grades: [
+      {id:"210", label:"דרגה 1",  salary:17881.32},
+      {id:"220", label:"דרגה 2",  salary:19311.82},
+      {id:"230", label:"דרגה 3",  salary:20742.33},
+      {id:"240", label:"דרגה א",  salary:21954.53},
+      {id:"250", label:"דרגה ב",  salary:23522.72},
+      {id:"260", label:"דרגה ג",  salary:25090.89},
+      {id:"270", label:"דרגה ד",  salary:26659.07},
+      {id:"280", label:"דרגה ה",  salary:28227.26},
+      {id:"290", label:"דרגה ו",  salary:29795.43},
+      {id:"300", label:"דרגה ז",  salary:31363.62},
+    ]
+  },
+  "148": {
+    name: "מנהל ומשק",
+    shortName: "מנהל ומשק",
+    number: "148",
+    color: "from-teal-600 to-green-700",
+    btnActive: "bg-gradient-to-br from-teal-600 to-green-700",
+    accent: "#0d9488",
+    pensionEmployee: 0.07, pensionEmployer: 0.135,
+    studyFundEmployee: 0.025, studyFundEmployer: 0.075,
+    grades: [
+      {id:"100", label:"דרגה 37",   salary:7004.36},
+      {id:"101", label:"דרגה 37א",  salary:7561.38},
+      {id:"102", label:"דרגה 37ב",  salary:8118.42},
+      {id:"110", label:"דרגה 38",   salary:7283.43},
+      {id:"111", label:"דרגה 38א",  salary:7840.46},
+      {id:"112", label:"דרגה 38ב",  salary:8397.48},
+      {id:"120", label:"דרגה 39",   salary:7827.23},
+      {id:"121", label:"דרגה 39א",  salary:8440.24},
+      {id:"122", label:"דרגה 39ב",  salary:9053.24},
+      {id:"130", label:"דרגה 40",   salary:8671.69},
+      {id:"131", label:"דרגה 40א",  salary:9284.55},
+      {id:"132", label:"דרגה 40ב",  salary:9897.57},
+      {id:"140", label:"דרגה 41",   salary:9658.60},
+      {id:"141", label:"דרגה 41א",  salary:10271.61},
+      {id:"142", label:"דרגה 41ב",  salary:10884.62},
+      {id:"150", label:"דרגה 42",   salary:11166.61},
+      {id:"151", label:"דרגה 42א",  salary:11779.63},
+      {id:"152", label:"דרגה 42ב",  salary:12392.64},
+      {id:"160", label:"דרגה 43",   salary:13098.67},
+      {id:"161", label:"דרגה 43א",  salary:13711.54},
+      {id:"162", label:"דרגה 43ב",  salary:14324.55},
+      {id:"170", label:"דרגה 44",   salary:14801.49},
+      {id:"171", label:"דרגה 44א",  salary:15494.04},
+      {id:"172", label:"דרגה 44ב",  salary:16186.75},
+    ]
+  },
+  "64": {
+    name: "לשכות שר ומנכ\"ל",
+    shortName: "לשכות שר/מנכ\"ל",
+    number: "64",
+    color: "from-amber-600 to-yellow-600",
+    btnActive: "bg-gradient-to-br from-amber-600 to-yellow-600",
+    accent: "#d97706",
+    pensionEmployee: 0.07, pensionEmployer: 0.135,
+    studyFundEmployee: 0.025, studyFundEmployer: 0.075,
+    grades: [
+      {id:"80",  label:"דרגה א",   salary:7617.13},
+      {id:"82",  label:"דרגה ב",   salary:8321.37},
+      {id:"90",  label:"דרגה ג",   salary:8302.68},
+      {id:"92",  label:"דרגה ד",   salary:9070.29},
+      {id:"95",  label:"דרגה ה",   salary:8846.63},
+      {id:"96",  label:"דרגה ו",   salary:9228.55},
+      {id:"97",  label:"דרגה ז",   salary:10638.08},
+      {id:"100", label:"דרגה ח",   salary:9687.32},
+      {id:"102", label:"דרגה ט",   salary:10583.06},
+      {id:"104", label:"דרגה י",   salary:11478.80},
+      {id:"110", label:"דרגה יא",  salary:10707.36},
+      {id:"112", label:"דרגה יב",  salary:11603.12},
+      {id:"114", label:"דרגה יג",  salary:12498.85},
+      {id:"120", label:"דרגה יד",  salary:11899.79},
+      {id:"122", label:"דרגה טו",  salary:12795.49},
+      {id:"124", label:"דרגה טז",  salary:13691.24},
+      {id:"130", label:"דרגה יז",  salary:13621.03},
+      {id:"132", label:"דרגה יח",  salary:14516.76},
+      {id:"134", label:"דרגה יט",  salary:15412.51},
+      {id:"140", label:"דרגה כ",   salary:15936.13},
+      {id:"142", label:"דרגה כא",  salary:16831.90},
+      {id:"144", label:"דרגה כב",  salary:17727.62},
+      {id:"146", label:"דרגה כג",  salary:18699.44},
+      {id:"265", label:"דרגה כד",  salary:24845.40},
+    ]
+  },
+  "87": {
+    name: "עובדים חיוניים אקדמאים (ותיק)",
+    shortName: "אקדמאים ותיק",
+    number: "87",
+    color: "from-lime-600 to-green-600",
+    btnActive: "bg-gradient-to-br from-lime-600 to-green-600",
+    accent: "#65a30d",
+    pensionEmployee: 0.07, pensionEmployer: 0.135,
+    studyFundEmployee: 0.025, studyFundEmployer: 0.075,
+    grades: [
+      {id:"80",  label:"דרגה 36",  salary:5959.49},
+      {id:"82",  label:"דרגה 36א", salary:6524.80},
+      {id:"84",  label:"דרגה 36ב", salary:7090.12},
+      {id:"90",  label:"דרגה 37",  salary:6100.48},
+      {id:"92",  label:"דרגה 37א", salary:6665.35},
+      {id:"94",  label:"דרגה 37ב", salary:7230.19},
+      {id:"95",  label:"דרגה 38",  salary:6241.69},
+      {id:"96",  label:"דרגה 38א", salary:6806.55},
+      {id:"97",  label:"דרגה 38ב", salary:7371.41},
+      {id:"100", label:"דרגה 39",  salary:6665.17},
+      {id:"102", label:"דרגה 39א", salary:7286.76},
+      {id:"104", label:"דרגה 39ב", salary:7908.37},
+      {id:"110", label:"דרגה 40",  salary:7366.05},
+      {id:"112", label:"דרגה 40א", salary:7987.61},
+      {id:"114", label:"דרגה 40ב", salary:8609.24},
+      {id:"120", label:"דרגה 41",  salary:8185.29},
+      {id:"122", label:"דרגה 41א", salary:8806.89},
+      {id:"124", label:"דרגה 41ב", salary:9428.52},
+      {id:"130", label:"דרגה 42",  salary:9452.39},
+      {id:"132", label:"דרגה 42א", salary:10073.97},
+      {id:"134", label:"דרגה 42ב", salary:10695.59},
+      {id:"140", label:"דרגה 43",  salary:11058.97},
+      {id:"142", label:"דרגה 43א", salary:11680.59},
+      {id:"144", label:"דרגה 43ב", salary:12302.17},
+      {id:"150", label:"דרגה 44",  salary:12496.65},
+      {id:"152", label:"דרגה 44א", salary:13199.06},
+      {id:"154", label:"דרגה 44ב", salary:13901.45},
+    ]
+  },
+
+  // כלכלנים נבחרים ותיק (14)
+  "14": {
+    name: "כלכלנים נבחרים (ותיק)",
+    shortName: "כלכלנים ותיק",
+    number: "14",
+    color: "from-sky-600 to-blue-700",
+    btnActive: "bg-gradient-to-br from-sky-600 to-blue-700",
+    accent: "#0284c7",
+    pensionEmployee: 0.07, pensionEmployer: 0.135,
+    studyFundEmployee: 0.025, studyFundEmployer: 0.075,
+    grades: [
+      {id:"100", label:"דרגה 39",       salary:10464.03},
+      {id:"102", label:"דרגה 39א",      salary:11058.92},
+      {id:"104", label:"דרגה 39ב",      salary:11653.82},
+      {id:"110", label:"דרגה 40",       salary:12220.50},
+      {id:"112", label:"דרגה 40א",      salary:12815.37},
+      {id:"114", label:"דרגה 40ב",      salary:13410.25},
+      {id:"120", label:"דרגה 41",       salary:14288.11},
+      {id:"122", label:"דרגה 41א",      salary:14882.97},
+      {id:"124", label:"דרגה 41ב",      salary:15477.87},
+      {id:"130", label:"דרגה 42",       salary:15836.64},
+      {id:"132", label:"דרגה 42א",      salary:16431.51},
+      {id:"134", label:"דרגה 42ב",      salary:17026.42},
+      {id:"140", label:"דרגה 43",       salary:17554.07},
+      {id:"142", label:"דרגה 43א",      salary:19126.23},
+      {id:"144", label:"דרגה 43ב",      salary:19721.13},
+      {id:"150", label:"דרגה 44",       salary:19836.11},
+      {id:"152", label:"דרגה 44א",      salary:21612.64},
+      {id:"154", label:"דרגה 44ב",      salary:22284.88},
+      {id:"200", label:"משופר 1",       salary:18673.96},
+      {id:"202", label:"משופר 1א",      salary:19794.40},
+      {id:"204", label:"משופר 1ב",      salary:20914.84},
+      {id:"210", label:"משופר 2",       salary:21163.82},
+      {id:"212", label:"משופר 2א",      salary:22408.75},
+      {id:"214", label:"משופר 2ב",      salary:23778.17},
+    ]
+  },
+
+  // עובדים חיוניים משפטנים ותיק (987) - same table as 187
+  "987": {
+    name: "עובדים חיוניים משפטנים (ותיק)",
+    shortName: "משפטנים ותיק",
+    number: "987",
+    color: "from-cyan-700 to-sky-800",
+    btnActive: "bg-gradient-to-br from-cyan-700 to-sky-800",
+    accent: "#0e7490",
+    pensionEmployee: 0.07, pensionEmployer: 0.135,
+    studyFundEmployee: 0.025, studyFundEmployer: 0.075,
+    grades: [
+      {id:"300", label:"דרגה ג",   salary:7546.21},
+      {id:"301", label:"דרגה ג1",  salary:8091.86},
+      {id:"302", label:"דרגה ג2",  salary:8637.51},
+      {id:"312", label:"דרגה א",   salary:10187.30},
+      {id:"315", label:"דרגה א3",  salary:10740.05},
+      {id:"318", label:"דרגה א6",  salary:11292.79},
+      {id:"322", label:"דרגה א10", salary:11221.57},
+      {id:"325", label:"דרגה א13", salary:11774.32},
+      {id:"328", label:"דרגה א16", salary:12327.06},
+      {id:"332", label:"דרגה א20", salary:12564.08},
+      {id:"335", label:"דרגה א23", salary:13116.82},
+      {id:"338", label:"דרגה א26", salary:13669.56},
+      {id:"342", label:"דרגה א30", salary:14305.42},
+      {id:"345", label:"דרגה א33", salary:14858.16},
+      {id:"348", label:"דרגה א36", salary:15410.91},
+      {id:"352", label:"דרגה א40", salary:16324.34},
+      {id:"355", label:"דרגה א43", salary:16877.08},
+      {id:"358", label:"דרגה א46", salary:17429.82},
+      {id:"401", label:"דרגה א50", salary:18772.99},
+      {id:"403", label:"דרגה א53", salary:19408.65},
+      {id:"405", label:"דרגה א56", salary:20044.30},
+    ]
+  },
+
+  // ── בכירים ──
+  // בכירים ותיקים (557)
+  "557": {
+    name: "בכירים ותיקים (צמודי יוקר)",
+    shortName: "בכירים ותיקים",
+    number: "557",
+    color: "from-gray-700 to-zinc-800",
+    btnActive: "bg-gradient-to-br from-gray-700 to-zinc-800",
+    accent: "#374151",
+    pensionEmployee: 0.07, pensionEmployer: 0.135,
+    studyFundEmployee: 0.025, studyFundEmployer: 0.075,
+    grades: [
+      {id:"340", label:"רמה 340",        salary:31080.46},
+      {id:"350", label:"רמה 350",        salary:33021.38},
+      {id:"360", label:"רמה 360",        salary:34964.44},
+      {id:"370", label:"רמה 370",        salary:39434.13},
+      {id:"450", label:"רמה 450 (מנהל מינהל האדמה)", salary:45630.88},
+    ]
+  },
+
+  // בכירים בלשכות שר ומנכ"ל (864)
+  "864": {
+    name: "בכירים בלשכות שר ומנכ\"ל",
+    shortName: "בכירים לשכות",
+    number: "864",
+    color: "from-stone-600 to-neutral-700",
+    btnActive: "bg-gradient-to-br from-stone-600 to-neutral-700",
+    accent: "#57534e",
+    pensionEmployee: 0.07, pensionEmployer: 0.135,
+    studyFundEmployee: 0.025, studyFundEmployer: 0.075,
+    grades: [
+      {id:"145", label:"דרגה 7 (145)", salary:31080.45},
+      {id:"150", label:"דרגה 8 (150)", salary:33022.14},
+    ]
+  },
+
+  // ── מומחים ──
+  // מומחים בשירותי הביטחון (965)
+  "965": {
+    name: "מומחים בשירותי הביטחון",
+    shortName: "מומחים ביטחון",
+    number: "965",
+    color: "from-red-700 to-rose-800",
+    btnActive: "bg-gradient-to-br from-red-700 to-rose-800",
+    accent: "#b91c1c",
+    pensionEmployee: 0.07, pensionEmployer: 0.135,
+    studyFundEmployee: 0.025, studyFundEmployer: 0.075,
+    grades: [
+      {id:"80",  label:"דרגה 18",  salary:7231.05},
+      {id:"95",  label:"דרגה 38",  salary:8677.26},
+      {id:"100", label:"דרגה 39",  salary:10123.47},
+      {id:"110", label:"דרגה 40",  salary:11569.67},
+      {id:"120", label:"דרגה 41",  salary:13015.88},
+      {id:"130", label:"דרגה 42",  salary:14462.08},
+      {id:"140", label:"דרגה 43",  salary:15908.29},
+      {id:"210", label:"דרגה 1",   salary:17271.60},
+      {id:"220", label:"דרגה 2",   salary:18653.33},
+      {id:"230", label:"דרגה 3",   salary:20035.06},
+      {id:"240", label:"דרגה א",   salary:21205.92},
+      {id:"250", label:"דרגה ב",   salary:22720.64},
+      {id:"260", label:"דרגה ג",   salary:24235.33},
+      {id:"270", label:"דרגה ד",   salary:25750.05},
+      {id:"280", label:"דרגה ה",   salary:27264.76},
+      {id:"290", label:"דרגה ו",   salary:28779.47},
+      {id:"300", label:"דרגה ז",   salary:30294.18},
+      {id:"310", label:"דרגה ח",   salary:31369.70},
+      {id:"320", label:"דרגה ט",   salary:32863.52},
+      {id:"330", label:"דרגה י",   salary:34357.31},
+      {id:"340", label:"דרגה יא",  salary:36468.26},
+      {id:"350", label:"דרגה יב",  salary:37870.87},
+      {id:"360", label:"דרגה יג",  salary:38838.69},
+      {id:"370", label:"דרגה יד",  salary:40332.47},
+      {id:"380", label:"דרגה טו",  salary:41826.28},
+    ]
+  },
+
+  // ── מנהל ומשק ──
+  // מנהל ומשק ותיק (948) - same as 148
+  "948": {
+    name: "מנהל ומשק (ותיק)",
+    shortName: "מנהל ומשק ותיק",
+    number: "948",
+    color: "from-teal-700 to-cyan-800",
+    btnActive: "bg-gradient-to-br from-teal-700 to-cyan-800",
+    accent: "#0f766e",
+    pensionEmployee: 0.07, pensionEmployer: 0.135,
+    studyFundEmployee: 0.025, studyFundEmployer: 0.075,
+    grades: [
+      {id:"100", label:"דרגה 37",  salary:7004.36},
+      {id:"101", label:"דרגה 37א", salary:7561.38},
+      {id:"102", label:"דרגה 37ב", salary:8118.42},
+      {id:"110", label:"דרגה 38",  salary:7283.43},
+      {id:"111", label:"דרגה 38א", salary:7840.46},
+      {id:"112", label:"דרגה 38ב", salary:8397.48},
+      {id:"120", label:"דרגה 39",  salary:7827.23},
+      {id:"121", label:"דרגה 39א", salary:8440.24},
+      {id:"122", label:"דרגה 39ב", salary:9053.24},
+      {id:"130", label:"דרגה 40",  salary:8671.69},
+      {id:"131", label:"דרגה 40א", salary:9284.55},
+      {id:"132", label:"דרגה 40ב", salary:9897.57},
+      {id:"140", label:"דרגה 41",  salary:9658.60},
+      {id:"141", label:"דרגה 41א", salary:10271.61},
+      {id:"142", label:"דרגה 41ב", salary:10884.62},
+      {id:"150", label:"דרגה 42",  salary:11166.61},
+      {id:"151", label:"דרגה 42א", salary:11779.63},
+      {id:"152", label:"דרגה 42ב", salary:12392.64},
+      {id:"160", label:"דרגה 43",  salary:13098.67},
+      {id:"161", label:"דרגה 43א", salary:13711.54},
+      {id:"162", label:"דרגה 43ב", salary:14324.55},
+      {id:"170", label:"דרגה 44",  salary:14801.49},
+      {id:"171", label:"דרגה 44א", salary:15494.04},
+      {id:"172", label:"דרגה 44ב", salary:16186.75},
+    ]
+  },
+
+  // לשכות שר ומנכ"ל חדש (564)
+  "564": {
+    name: "לשכות שר ומנכ\"ל (חדש)",
+    shortName: "לשכות שר/מנכ\"ל חדש",
+    number: "564",
+    color: "from-yellow-600 to-amber-700",
+    btnActive: "bg-gradient-to-br from-yellow-600 to-amber-700",
+    accent: "#ca8a04",
+    pensionEmployee: 0.07, pensionEmployer: 0.135,
+    studyFundEmployee: 0.025, studyFundEmployer: 0.075,
+    grades: [
+      {id:"70",  label:"דרגה א",   salary:6634.30},
+      {id:"72",  label:"דרגה ב",   salary:6848.97},
+      {id:"80",  label:"דרגה ג",   salary:7617.13},
+      {id:"82",  label:"דרגה ד",   salary:8321.37},
+      {id:"90",  label:"דרגה ה",   salary:8302.68},
+      {id:"92",  label:"דרגה ו",   salary:9070.29},
+      {id:"95",  label:"דרגה ז",   salary:8846.63},
+      {id:"96",  label:"דרגה ח",   salary:9228.55},
+      {id:"97",  label:"דרגה ט",   salary:10638.08},
+      {id:"100", label:"דרגה י",   salary:9687.32},
+      {id:"102", label:"דרגה יא",  salary:10583.06},
+      {id:"104", label:"דרגה יב",  salary:11478.80},
+      {id:"110", label:"דרגה יג",  salary:10707.36},
+      {id:"112", label:"דרגה יד",  salary:11603.12},
+      {id:"114", label:"דרגה טו",  salary:12498.85},
+      {id:"120", label:"דרגה טז",  salary:11899.79},
+      {id:"122", label:"דרגה יז",  salary:12795.49},
+      {id:"124", label:"דרגה יח",  salary:13691.24},
+      {id:"130", label:"דרגה יט",  salary:13621.03},
+      {id:"132", label:"דרגה כ",   salary:14516.76},
+      {id:"134", label:"דרגה כא",  salary:15412.51},
+      {id:"140", label:"דרגה כב",  salary:15936.13},
+      {id:"142", label:"דרגה כג",  salary:16831.90},
+      {id:"144", label:"דרגה כד",  salary:17727.62},
+      {id:"146", label:"דרגה כה",  salary:16893.49},
+      {id:"148", label:"דרגה כו",  salary:18653.32},
+      {id:"149", label:"דרגה כז",  salary:20035.06},
+      {id:"250", label:"דרגה כח",  salary:21232.38},
+      {id:"251", label:"דרגה כט",  salary:21878.94},
+      {id:"260", label:"דרגה ל",   salary:22647.89},
+      {id:"265", label:"דרגה לא",  salary:22975.14},
+      {id:"270", label:"דרגה לב",  salary:24067.43},
+      {id:"280", label:"דרגה לג",  salary:25122.51},
+      {id:"290", label:"דרגה לד",  salary:26239.07},
+      {id:"300", label:"דרגה לה",  salary:27355.62},
+      {id:"310", label:"דרגה לו",  salary:28472.18},
+      {id:"145", label:"דרגה לז",  salary:31080.45},
+      {id:"150", label:"דרגה לח",  salary:33022.14},
+    ]
+  },
+
+  // ── מיוחדים ──
+  // צוערים חדש (554)
+  "554": {
+    name: "צוערים (חדש)",
+    shortName: "צוערים חדש",
+    number: "554",
+    color: "from-orange-600 to-red-600",
+    btnActive: "bg-gradient-to-br from-orange-600 to-red-600",
+    accent: "#ea580c",
+    pensionEmployee: 0.07, pensionEmployer: 0.135,
+    studyFundEmployee: 0.025, studyFundEmployer: 0.075,
+    grades: [
+      {id:"409", label:"צוער",         salary:5929.27},
+      {id:"410", label:"צוער ותיק",    salary:6486.67},
+      {id:"411", label:"צוע.א1",       salary:6331.20},
+      {id:"412", label:"צוע.א2",       salary:6733.13},
+      {id:"413", label:"צוע.ב1 ותיק", salary:6888.59},
+      {id:"414", label:"צוע.ב2 ותיק", salary:7290.53},
+    ]
+  },
+
+  // יחידת היעדים (167)
+  "167": {
+    name: "יחידת היעדים",
+    shortName: "יחידת היעדים",
+    number: "167",
+    color: "from-indigo-700 to-blue-800",
+    btnActive: "bg-gradient-to-br from-indigo-700 to-blue-800",
+    accent: "#3730a3",
+    pensionEmployee: 0.07, pensionEmployer: 0.135,
+    studyFundEmployee: 0.025, studyFundEmployer: 0.075,
+    grades: [
+      {id:"101", label:"ראש ענף 1",             salary:10736.05},
+      {id:"102", label:"ראש ענף 2",             salary:11367.59},
+      {id:"103", label:"ראש ענף 3",             salary:11999.11},
+      {id:"111", label:"מרכז בכיר 1",           salary:11999.11},
+      {id:"112", label:"מרכז בכיר 2",           salary:13262.18},
+      {id:"113", label:"מרכז בכיר 3",           salary:14525.24},
+      {id:"121", label:"מנהל תחום תיאום 1",    salary:13262.18},
+      {id:"122", label:"מנהל תחום תיאום 2",    salary:14525.24},
+      {id:"123", label:"מנהל תחום תיאום 3",    salary:16419.84},
+      {id:"131", label:"מנהל תחום מעקב 1",     salary:13262.18},
+      {id:"132", label:"מנהל תחום מעקב 2",     salary:14525.24},
+      {id:"133", label:"מנהל תחום מעקב 3",     salary:16419.84},
+      {id:"134", label:"מנהל תחום מעקב 4",     salary:19577.50},
+    ]
+  },
+
+  // חוקרים במחלקה לחקירות שוטרים (168)
+  "168": {
+    name: "חוקרים - חקירות שוטרים",
+    shortName: "חוקרי שוטרים",
+    number: "168",
+    color: "from-blue-800 to-indigo-900",
+    btnActive: "bg-gradient-to-br from-blue-800 to-indigo-900",
+    accent: "#1e3a8a",
+    pensionEmployee: 0.07, pensionEmployer: 0.135,
+    studyFundEmployee: 0.025, studyFundEmployer: 0.075,
+    grades: [
+      {id:"10", label:"צוער",                           salary:6817.46},
+      {id:"20", label:"חוקר א׳",                        salary:7437.23},
+      {id:"21", label:"חוקר א׳ + גמול השתלמות א׳",     salary:7933.05},
+      {id:"22", label:"חוקר א׳ + גמול השתלמות א׳+ב׳",  salary:8428.86},
+      {id:"30", label:"חוקר ב׳",                        salary:8304.91},
+      {id:"31", label:"חוקר ב׳ + גמול א׳",             salary:8800.73},
+      {id:"32", label:"חוקר ב׳ + גמול א׳+ב׳",          salary:9296.53},
+      {id:"40", label:"חוקר ג׳",                        salary:9048.62},
+      {id:"41", label:"חוקר ג׳ + גמול א׳",             salary:9544.44},
+      {id:"42", label:"חוקר ג׳ + גמול א׳+ב׳",          salary:10040.26},
+      {id:"50", label:"חוקר בכיר א׳",                  salary:9916.30},
+      {id:"51", label:"חוקר בכיר א׳ + גמול א׳",       salary:10412.12},
+      {id:"52", label:"חוקר בכיר א׳ + גמול א׳+ב׳",    salary:10907.94},
+      {id:"60", label:"חוקר בכיר ב׳",                  salary:10783.98},
+      {id:"61", label:"חוקר בכיר ב׳ + גמול א׳",       salary:11279.80},
+      {id:"62", label:"חוקר בכיר ב׳ + גמול א׳+ב׳",    salary:11775.62},
+      {id:"70", label:"חוקר בכיר ג׳",                  salary:11651.66},
+      {id:"71", label:"חוקר בכיר ג׳ + גמול א׳",       salary:12147.48},
+      {id:"72", label:"חוקר בכיר ג׳ + גמול א׳+ב׳",    salary:12643.28},
+      {id:"75", label:"ראש שלוחה",                      salary:12406.96},
+      {id:"76", label:"ראש שלוחה + גמול א׳",           salary:12902.78},
+      {id:"77", label:"ראש שלוחה + גמול א׳+ב׳",        salary:13398.59},
+      {id:"80", label:"סגן ראש צוות",                   salary:12519.33},
+      {id:"90", label:"ראש צוות",                       salary:13758.88},
+      {id:"91", label:"ראש צוות + גמול א׳",            salary:14316.68},
+      {id:"92", label:"ראש צוות + גמול א׳+ב׳",         salary:14874.46},
+    ]
+  },
+
+  // מינהל תעופה אזרחי (122)
+  "122": {
+    name: "מינהל תעופה אזרחי",
+    shortName: "תעופה אזרחי",
+    number: "122",
+    color: "from-sky-500 to-cyan-600",
+    btnActive: "bg-gradient-to-br from-sky-500 to-cyan-600",
+    accent: "#0ea5e9",
+    pensionEmployee: 0.07, pensionEmployer: 0.135,
+    studyFundEmployee: 0.025, studyFundEmployer: 0.075,
+    grades: [
+      {id:"10",  label:"טייסים 1",   salary:21634.88},
+      {id:"11",  label:"טייסים 1א",  salary:22251.35},
+      {id:"12",  label:"טייסים 1ב",  salary:22869.12},
+      {id:"20",  label:"טייסים 2",   salary:19049.34},
+      {id:"21",  label:"טייסים 2א",  salary:19666.17},
+      {id:"22",  label:"טייסים 2ב",  salary:20283.96},
+      {id:"30",  label:"טייסים 3",   salary:17009.19},
+      {id:"31",  label:"טייסים 3א",  salary:17625.28},
+      {id:"32",  label:"טייסים 3ב",  salary:18243.05},
+      {id:"40",  label:"טייסים 4",   salary:15647.51},
+      {id:"41",  label:"טייסים 4א",  salary:16264.69},
+      {id:"42",  label:"טייסים 4ב",  salary:16882.47},
+      {id:"50",  label:"טייסים 5",   salary:14287.00},
+      {id:"51",  label:"טייסים 5א",  salary:14904.08},
+      {id:"52",  label:"טייסים 5ב",  salary:15521.85},
+      {id:"60",  label:"טייסים 6",   salary:12926.51},
+      {id:"61",  label:"טייסים 6א",  salary:13543.48},
+      {id:"62",  label:"טייסים 6ב",  salary:14161.27},
+      {id:"70",  label:"טייסים 7",   salary:12245.66},
+      {id:"71",  label:"טייסים 7א",  salary:12863.19},
+      {id:"72",  label:"טייסים 7ב",  salary:13480.99},
+      {id:"80",  label:"מהנדסים 8",  salary:14046.99},
+      {id:"81",  label:"מהנדסים 8א", salary:14755.38},
+      {id:"82",  label:"מהנדסים 8ב", salary:15464.03},
+      {id:"90",  label:"מהנדסים 9",  salary:12876.60},
+      {id:"91",  label:"מהנדסים 9א", salary:13584.81},
+      {id:"92",  label:"מהנדסים 9ב", salary:14293.48},
+      {id:"100", label:"מהנדסים 10", salary:11706.22},
+      {id:"110", label:"מהנדסים 11", salary:10535.83},
+      {id:"120", label:"מהנדסים 12", salary:9365.46},
+      {id:"130", label:"מהנדסים 13", salary:8584.80},
+      {id:"140", label:"מהנדסים 14", salary:7804.14},
+      {id:"150", label:"מהנדסים 15", salary:7023.49},
+      {id:"160", label:"הנדסאים 16", salary:8652.53},
+      {id:"170", label:"הנדסאים 17", salary:7787.51},
+      {id:"180", label:"הנדסאים 18", salary:6922.50},
+      {id:"190", label:"הנדסאים 19", salary:6056.29},
+      {id:"210", label:"מפקח מובילים א",  salary:27328.77},
+      {id:"220", label:"מפקח מובילים ב",  salary:28516.98},
+      {id:"230", label:"מפקח מובילים ג",  salary:29705.18},
+      {id:"240", label:"מפקח מובילים ד",  salary:30893.40},
+      {id:"250", label:"מפקח מובילים ה",  salary:32081.61},
+      {id:"260", label:"מפקח ראשי ו",     salary:33269.81},
+      {id:"270", label:"מפקח ראשי ז",     salary:34458.02},
+      {id:"280", label:"מפקח ראשי ח",     salary:35646.23},
+      {id:"290", label:"מפקח ראשי ט",     salary:36834.43},
+      {id:"300", label:"מפקח ראשי י",     salary:38022.64},
+    ]
+  },
+
+  // ── ביטחון ואחרים ──
+  // מאבטחי מתקן (384)
+  "384": {
+    name: "מאבטחי מתקן",
+    shortName: "מאבטחי מתקן",
+    number: "384",
+    color: "from-zinc-600 to-stone-700",
+    btnActive: "bg-gradient-to-br from-zinc-600 to-stone-700",
+    accent: "#52525b",
+    pensionEmployee: 0.07, pensionEmployer: 0.135,
+    studyFundEmployee: 0.025, studyFundEmployer: 0.075,
+    grades: [
+      {id:"10", label:"מאבטח מתקן",        salary:6352.08},
+      {id:"20", label:"קורס אחיד",          salary:6867.93},
+      {id:"30", label:"קב\"ט",              salary:8374.17},
+    ]
+  },
+
+  // מאבטחים (387)
+  "387": {
+    name: "מאבטחים",
+    shortName: "מאבטחים",
+    number: "387",
+    color: "from-slate-700 to-gray-800",
+    btnActive: "bg-gradient-to-br from-slate-700 to-gray-800",
+    accent: "#334155",
+    pensionEmployee: 0.07, pensionEmployer: 0.135,
+    studyFundEmployee: 0.025, studyFundEmployer: 0.075,
+    grades: [
+      {id:"810", label:"מאבטח 1",           salary:5718.72},
+      {id:"820", label:"מאבטח 2",           salary:5826.91},
+      {id:"830", label:"מאבטח 3",           salary:6245.96},
+      {id:"840", label:"מדריך ירי/קמ\"ג 1", salary:6710.50},
+      {id:"850", label:"מדריך ירי/קמ\"ג 2", salary:7134.80},
+      {id:"815", label:"מאבטח 1 ב.מ.",      salary:5961.49},
+      {id:"825", label:"מאבטח 2 ב.מ.",      salary:6073.48},
+      {id:"835", label:"מאבטח 3 ב.מ.",      salary:6510.71},
+      {id:"860", label:"חמוש 1",             salary:6896.64},
+      {id:"870", label:"חמוש 2",             salary:7011.58},
+      {id:"880", label:"חמוש 3",             salary:7528.83},
+      {id:"890", label:"לא חמוש 1",          salary:6417.70},
+      {id:"900", label:"לא חמוש 2",          salary:6551.80},
+      {id:"910", label:"לא חמוש 3",          salary:7011.58},
+      {id:"920", label:"מדריך ירי 1",        salary:8046.07},
+      {id:"930", label:"מדריך ירי 2",        salary:9193.41},
+    ]
+  },
+
+  // עובדי המטה לביטחון לאומי (522)
+  "522": {
+    name: "עובדי המטה לביטחון לאומי",
+    shortName: "מטה ביטחון לאומי",
+    number: "522",
+    color: "from-red-800 to-red-900",
+    btnActive: "bg-gradient-to-br from-red-800 to-red-900",
+    accent: "#991b1b",
+    pensionEmployee: 0.07, pensionEmployer: 0.135,
+    studyFundEmployee: 0.025, studyFundEmployer: 0.075,
+    grades: [
+      {id:"130", label:"עוזר ראש מדור 1", salary:9505.66},
+      {id:"140", label:"עוזר ראש מדור 2", salary:10693.87},
+      {id:"150", label:"עוזר ראש מדור 3", salary:11882.08},
+      {id:"160", label:"עוזר ראש מדור 4", salary:13070.28},
+      {id:"170", label:"ראש מדור 1",      salary:14258.49},
+      {id:"180", label:"ראש מדור 2",      salary:15446.69},
+      {id:"190", label:"ראש מדור 3",      salary:16634.90},
+      {id:"200", label:"ראש ענף 1",       salary:17823.11},
+      {id:"210", label:"ראש ענף 2",       salary:19011.32},
+      {id:"220", label:"ראש ענף 3",       salary:20199.53},
+      {id:"230", label:"ראש מחלקה 1",     salary:21387.74},
+      {id:"240", label:"ראש מחלקה 2",     salary:22575.94},
+      {id:"250", label:"ראש מחלקה 3",     salary:23764.15},
+      {id:"260", label:"ראש חטיבה 1",     salary:27328.77},
+      {id:"270", label:"ראש חטיבה 2",     salary:28516.98},
+      {id:"280", label:"ראש חטיבה 3",     salary:30031.94},
+      {id:"290", label:"ראש אגף",         salary:31798.80},
+      {id:"300", label:"סגן ראש המל\"ל",  salary:38499.11},
+      {id:"310", label:"סגן ראש המל\"ל חדש", salary:39429.83},
+      {id:"320", label:"משנה לראש המל\"ל", salary:40478.58},
+    ]
+  },
+
+  // עובדי חדר מצב קיברנטי (589)
+  "589": {
+    name: "עובדי חדר מצב קיברנטי",
+    shortName: "חדר מצב קיברנטי",
+    number: "589",
+    color: "from-violet-700 to-purple-800",
+    btnActive: "bg-gradient-to-br from-violet-700 to-purple-800",
+    accent: "#6d28d9",
+    pensionEmployee: 0.07, pensionEmployer: 0.135,
+    studyFundEmployee: 0.025, studyFundEmployer: 0.075,
+    grades: [
+      {id:"100", label:"עובד חדר מצב קיברנטי (שעתי)", salary: 54.92 * 182},
+    ]
+  },
+
+  // עובדי אית"ן (109)
+  "109": {
+    name: "עובדי אית\"ן ואית\"ן אבטחה",
+    shortName: "עובדי אית\"ן",
+    number: "109",
+    color: "from-emerald-700 to-green-800",
+    btnActive: "bg-gradient-to-br from-emerald-700 to-green-800",
+    accent: "#047857",
+    pensionEmployee: 0.07, pensionEmployer: 0.135,
+    studyFundEmployee: 0.025, studyFundEmployer: 0.075,
+    grades: [
+      {id:"1",  label:"דרגה 1",   salary:5761.47},
+      {id:"2",  label:"דרגה 2",   salary:5899.26},
+      {id:"3",  label:"דרגה 3",   salary:6039.18},
+      {id:"4",  label:"דרגה 4",   salary:6178.76},
+      {id:"5",  label:"דרגה 5",   salary:6597.99},
+      {id:"6",  label:"דרגה 6",   salary:7291.78},
+      {id:"10", label:"דרגה 10",  salary:6241.18},
+      {id:"11", label:"דרגה 11",  salary:6664.63},
+      {id:"12", label:"דרגה 12",  salary:7365.44},
+    ]
+  },
+
+  // ── דירוג 402 ──
+  "402": {
+    name: "כלכלנים דירוג 402",
+    shortName: "דירוג 402",
+    number: "402",
+    color: "from-blue-700 to-violet-800",
+    btnActive: "bg-gradient-to-br from-blue-700 to-violet-800",
+    accent: "#1d4ed8",
+    pensionEmployee: 0.07, pensionEmployer: 0.135,
+    studyFundEmployee: 0.025, studyFundEmployer: 0.075,
+    grades: [
+      {id:"36",   label:"דרגה 36",  salary:8264.16},
+      {id:"36א",  label:"דרגה 36א", salary:8764.16},
+      {id:"37",   label:"דרגה 37",  salary:8861.30},
+      {id:"37א",  label:"דרגה 37א", salary:9361.30},
+      {id:"38",   label:"דרגה 38",  salary:9819.78},
+      {id:"38א",  label:"דרגה 38א", salary:10319.78},
+      {id:"39",   label:"דרגה 39",  salary:10631.57},
+      {id:"39א",  label:"דרגה 39א", salary:11131.57},
+      {id:"40",   label:"דרגה 40",  salary:12281.86},
+      {id:"40א",  label:"דרגה 40א", salary:12781.86},
+      {id:"41",   label:"דרגה 41",  salary:14224.50},
+      {id:"41א",  label:"דרגה 41א", salary:14724.50},
+      {id:"42",   label:"דרגה 42",  salary:15679.44},
+      {id:"42א",  label:"דרגה 42א", salary:16179.44},
+      {id:"43",   label:"דרגה 43",  salary:17293.07},
+      {id:"43א",  label:"דרגה 43א", salary:17793.07},
+      {id:"44",   label:"דרגה 44",  salary:19437.16},
+      {id:"44א",  label:"דרגה 44א", salary:19937.16},
+    ]
+  },
+
+  // ── חוזים נוספים מהמאגר המלא ──
+
+  "514": { name:"כלכלנים נבחרים (514)", shortName:"כלכלנים 514", number:"514",
+    color:"from-blue-500 to-sky-600", btnActive:"bg-gradient-to-br from-blue-500 to-sky-600", accent:"#0284c7",
+    pensionEmployee:0.07,pensionEmployer:0.135,studyFundEmployee:0.025,studyFundEmployer:0.075,
+    grades:[
+      {id:"100",label:"דרגה 39",salary:10773.77},{id:"102",label:"דרגה 39א",salary:11368.66},{id:"104",label:"דרגה 39ב",salary:11963.56},
+      {id:"110",label:"דרגה 40",salary:12582.23},{id:"112",label:"דרגה 40א",salary:13177.10},{id:"114",label:"דרגה 40ב",salary:13771.98},
+      {id:"120",label:"דרגה 41",salary:14711.04},{id:"122",label:"דרגה 41א",salary:15305.90},{id:"124",label:"דרגה 41ב",salary:15900.80},
+      {id:"130",label:"דרגה 42",salary:16305.40},{id:"132",label:"דרגה 42א",salary:16900.27},{id:"134",label:"דרגה 42ב",salary:17495.18},
+      {id:"140",label:"דרגה 43",salary:18073.67},{id:"142",label:"דרגה 43א",salary:19645.83},{id:"144",label:"דרגה 43ב",salary:20240.73},
+      {id:"150",label:"דרגה 44",salary:20423.26},{id:"152",label:"דרגה 44א",salary:22199.79},{id:"154",label:"דרגה 44ב",salary:22872.03},
+    ]},
+
+  "964": { name:"מומחים (964)", shortName:"מומחים 964", number:"964",
+    color:"from-rose-500 to-red-600", btnActive:"bg-gradient-to-br from-rose-500 to-red-600", accent:"#e11d48",
+    pensionEmployee:0.07,pensionEmployer:0.135,studyFundEmployee:0.025,studyFundEmployer:0.075,
+    grades:[
+      {id:"130",label:"דרגה 11",salary:11053.84},{id:"140",label:"דרגה 12",salary:11704.07},{id:"150",label:"דרגה 13",salary:12354.28},
+      {id:"160",label:"דרגה 14",salary:13004.51},{id:"170",label:"דרגה 15",salary:13654.74},{id:"180",label:"דרגה 16",salary:14304.96},
+      {id:"190",label:"דרגה 17",salary:14955.19},{id:"200",label:"דרגה 18",salary:15605.42},{id:"205",label:"מנהל משימות",salary:16905.87},
+      {id:"210",label:"דרגה 1",salary:18410.61},{id:"220",label:"דרגה 2",salary:19883.45},{id:"230",label:"דרגה 3",salary:21356.30},
+      {id:"240",label:"דרגה א",salary:22604.38},{id:"250",label:"דרגה ב",salary:24218.99},{id:"260",label:"דרגה ג",salary:25833.58},
+      {id:"270",label:"דרגה ד",salary:27448.18},{id:"280",label:"דרגה ה",salary:29062.79},{id:"290",label:"דרגה ו",salary:30677.37},
+      {id:"300",label:"דרגה ז",salary:32291.98},{id:"350",label:"דרגה 350 (חדשה)",salary:42535.41},{id:"600",label:"דרגה 600 (חדשה)",salary:66390.96},
+    ]},
+
+  "48": { name:"פרה-רפואיים (48)", shortName:"פרה-רפואי", number:"48",
+    color:"from-red-500 to-pink-600", btnActive:"bg-gradient-to-br from-red-500 to-pink-600", accent:"#ef4444",
+    pensionEmployee:0.07,pensionEmployer:0.135,studyFundEmployee:0.025,studyFundEmployer:0.075,
+    grades:[
+      {id:"11-0",label:"דרגה 1 (0-9 שנ')",salary:6310.48},{id:"21-0",label:"דרגה 2 (0-9 שנ')",salary:6812.34},{id:"31-0",label:"דרגה 3 (0-9 שנ')",salary:7124.91},
+      {id:"41-0",label:"דרגה 4 (0-9 שנ')",salary:7453.26},{id:"51-0",label:"דרגה 5 (0-9 שנ')",salary:7800.26},{id:"61-0",label:"דרגה 6 (0-9 שנ')",salary:8181.69},
+      {id:"71-0",label:"דרגה 7 (0-9 שנ')",salary:8584.60},{id:"81-0",label:"דרגה 8 (0-9 שנ')",salary:9010.45},{id:"91-0",label:"דרגה 9 (0-9 שנ')",salary:9581.14},
+      {id:"11-10",label:"דרגה 1 (10-19 שנ')",salary:7522.08},{id:"21-10",label:"דרגה 2 (10-19 שנ')",salary:8120.30},{id:"31-10",label:"דרגה 3 (10-19 שנ')",salary:8492.89},
+      {id:"41-10",label:"דרגה 4 (10-19 שנ')",salary:8884.31},{id:"51-10",label:"דרגה 5 (10-19 שנ')",salary:9297.92},{id:"61-10",label:"דרגה 6 (10-19 שנ')",salary:9752.56},
+      {id:"71-10",label:"דרגה 7 (10-19 שנ')",salary:10232.84},{id:"81-10",label:"דרגה 8 (10-19 שנ')",salary:10740.47},{id:"91-10",label:"דרגה 9 (10-19 שנ')",salary:11420.71},
+      {id:"11-20",label:"דרגה 1 (20+ שנ')",salary:8966.32},{id:"21-20",label:"דרגה 2 (20+ שנ')",salary:9679.39},{id:"31-20",label:"דרגה 3 (20+ שנ')",salary:10123.53},
+      {id:"41-20",label:"דרגה 4 (20+ שנ')",salary:10590.08},{id:"51-20",label:"דרגה 5 (20+ שנ')",salary:11083.12},{id:"61-20",label:"דרגה 6 (20+ שנ')",salary:11625.05},
+      {id:"71-20",label:"דרגה 7 (20+ שנ')",salary:12197.55},{id:"81-20",label:"דרגה 8 (20+ שנ')",salary:12802.63},{id:"91-20",label:"דרגה 9 (20+ שנ')",salary:13613.49},
+    ]},
+
+  "110": { name:"משרד הפנים - דירוג 110", shortName:"פנים 110", number:"110",
+    color:"from-indigo-500 to-blue-600", btnActive:"bg-gradient-to-br from-indigo-500 to-blue-600", accent:"#4338ca",
+    pensionEmployee:0.07,pensionEmployer:0.135,studyFundEmployee:0.025,studyFundEmployer:0.075,
+    grades:[
+      {id:"300",label:"א36",salary:5872.19},{id:"310",label:"ב36",salary:6459.41},{id:"311",label:"ג37",salary:7046.66},
+      {id:"312",label:"ד37",salary:7438.11},{id:"313",label:"ה37",salary:7829.58},{id:"314",label:"א38",salary:8416.83},
+      {id:"315",label:"ב38",salary:9004.04},{id:"322",label:"ג38",salary:9395.51},{id:"323",label:"ד38",salary:10147.14},
+      {id:"324",label:"א39",salary:10374.20},{id:"325",label:"ב39",salary:10961.44},{id:"330",label:"א40",salary:11352.90},
+      {id:"340",label:"ב40",salary:11728.55},{id:"350",label:"41",salary:13253.45},{id:"360",label:"42",salary:15108.11},{id:"370",label:"43",salary:16770.00},
+    ]},
+
+  "610": { name:"משרד הפנים - דירוג 610", shortName:"פנים 610", number:"610",
+    color:"from-indigo-600 to-violet-700", btnActive:"bg-gradient-to-br from-indigo-600 to-violet-700", accent:"#4c1d95",
+    pensionEmployee:0.07,pensionEmployer:0.135,studyFundEmployee:0.025,studyFundEmployer:0.075,
+    grades:[
+      {id:"300",label:"א36",salary:5872.19},{id:"310",label:"ב36",salary:6459.41},{id:"311",label:"ג37",salary:7046.66},
+      {id:"312",label:"ד37",salary:7438.11},{id:"313",label:"ה37",salary:7829.58},{id:"314",label:"א38",salary:8416.83},
+      {id:"315",label:"ב38",salary:9004.04},{id:"322",label:"ג38",salary:9395.51},{id:"323",label:"ד38",salary:10147.14},
+      {id:"324",label:"א39",salary:10374.20},{id:"325",label:"ב39",salary:10961.44},{id:"330",label:"א40",salary:11352.90},
+      {id:"340",label:"ב40",salary:11728.55},{id:"350",label:"41",salary:13253.45},{id:"360",label:"42",salary:15108.11},{id:"370",label:"43",salary:16770.00},
+    ]},
+
+  "553": { name:"משרד הפנים חדש (553)", shortName:"פנים חדש 553", number:"553",
+    color:"from-blue-600 to-indigo-700", btnActive:"bg-gradient-to-br from-blue-600 to-indigo-700", accent:"#2563eb",
+    pensionEmployee:0.07,pensionEmployer:0.135,studyFundEmployee:0.025,studyFundEmployer:0.075,
+    grades:[
+      {id:"300",label:"א36",salary:5190.56},{id:"310",label:"ב36",salary:5709.64},{id:"311",label:"ג37",salary:6228.71},
+      {id:"312",label:"ד37",salary:6574.72},{id:"313",label:"ה37",salary:6920.75},{id:"314",label:"א38",salary:7439.83},
+      {id:"315",label:"ב38",salary:7958.88},{id:"322",label:"ג38",salary:8304.92},{id:"323",label:"ד38",salary:8969.30},
+      {id:"324",label:"א39",salary:9170.00},{id:"325",label:"ב39",salary:9689.09},{id:"330",label:"א40",salary:10035.10},
+      {id:"340",label:"ב40",salary:10367.16},{id:"350",label:"41",salary:11715.05},{id:"360",label:"42",salary:13354.43},{id:"370",label:"43",salary:14823.40},
+    ]},
+
+  "556": { name:"עובדי המשטרה הירוקה (556)", shortName:"משטרה ירוקה", number:"556",
+    color:"from-green-600 to-emerald-700", btnActive:"bg-gradient-to-br from-green-600 to-emerald-700", accent:"#16a34a",
+    pensionEmployee:0.07,pensionEmployer:0.135,studyFundEmployee:0.025,studyFundEmployer:0.075,
+    grades:[
+      {id:"150",label:"דרגה 15",salary:7350.52},{id:"151",label:"15א",salary:7921.96},{id:"152",label:"15ב",salary:8342.98},
+      {id:"160",label:"דרגה 16",salary:7903.43},{id:"161",label:"16א",salary:8474.89},{id:"162",label:"16ב",salary:8895.92},
+      {id:"170",label:"דרגה 17",salary:8578.99},{id:"171",label:"17א",salary:9150.43},{id:"172",label:"17ב",salary:9571.47},
+      {id:"180",label:"דרגה 18",salary:9243.43},{id:"181",label:"18א",salary:9814.90},{id:"182",label:"18ב",salary:10235.93},
+      {id:"190",label:"דרגה 19",salary:10136.74},{id:"191",label:"19א",salary:10708.18},{id:"192",label:"19ב",salary:11129.20},
+      {id:"200",label:"דרגה 20",salary:11220.51},{id:"201",label:"20א",salary:11791.96},{id:"202",label:"20ב",salary:12212.99},
+      {id:"210",label:"דרגה 21",salary:12342.56},{id:"211",label:"21א",salary:12914.02},{id:"212",label:"21ב",salary:13335.05},
+      {id:"220",label:"דרגה 22",salary:13661.98},{id:"221",label:"22א",salary:14233.43},{id:"222",label:"22ב",salary:14654.46},
+    ]},
+
+  "210": { name:"סיירת ירוקה (210)", shortName:"סיירת ירוקה 210", number:"210",
+    color:"from-green-500 to-teal-600", btnActive:"bg-gradient-to-br from-green-500 to-teal-600", accent:"#059669",
+    pensionEmployee:0.07,pensionEmployer:0.135,studyFundEmployee:0.025,studyFundEmployer:0.075,
+    grades:[
+      {id:"250",label:"15",salary:7938.56},{id:"251",label:"15א",salary:8555.71},{id:"252",label:"15ב",salary:9010.42},
+      {id:"253",label:"16",salary:8535.69},{id:"254",label:"16א",salary:9152.86},{id:"255",label:"16ב",salary:9607.57},
+      {id:"256",label:"17",salary:9265.30},{id:"257",label:"17א",salary:9882.45},{id:"258",label:"17ב",salary:10337.17},
+      {id:"259",label:"18",salary:9982.89},{id:"260",label:"18א",salary:10600.08},{id:"261",label:"18ב",salary:11054.79},
+      {id:"262",label:"19",salary:10947.65},{id:"263",label:"19א",salary:11564.81},{id:"264",label:"19ב",salary:12019.53},
+      {id:"265",label:"20",salary:12118.12},{id:"266",label:"20א",salary:12735.30},{id:"267",label:"20ב",salary:13190.02},
+      {id:"268",label:"21",salary:13499.60},{id:"269",label:"21א",salary:14116.77},{id:"270",label:"21ב",salary:14571.49},
+      {id:"271",label:"22",salary:15119.55},{id:"272",label:"22א",salary:15736.72},{id:"273",label:"22ב",salary:16191.43},
+    ]},
+
+  "710": { name:"סיירת ירוקה (710)", shortName:"סיירת ירוקה 710", number:"710",
+    color:"from-teal-500 to-green-700", btnActive:"bg-gradient-to-br from-teal-500 to-green-700", accent:"#0d9488",
+    pensionEmployee:0.07,pensionEmployer:0.135,studyFundEmployee:0.025,studyFundEmployer:0.075,
+    grades:[
+      {id:"250",label:"15",salary:7938.56},{id:"251",label:"15א",salary:8555.71},{id:"252",label:"15ב",salary:9010.42},
+      {id:"253",label:"16",salary:8535.69},{id:"254",label:"16א",salary:9152.86},{id:"255",label:"16ב",salary:9607.57},
+      {id:"256",label:"17",salary:9265.30},{id:"257",label:"17א",salary:9882.45},{id:"258",label:"17ב",salary:10337.17},
+      {id:"259",label:"18",salary:9982.89},{id:"260",label:"18א",salary:10600.08},{id:"261",label:"18ב",salary:11054.79},
+      {id:"262",label:"19",salary:10947.65},{id:"263",label:"19א",salary:11564.81},{id:"264",label:"19ב",salary:12019.53},
+      {id:"265",label:"20",salary:12118.12},{id:"266",label:"20א",salary:12735.30},{id:"267",label:"20ב",salary:13190.02},
+      {id:"268",label:"21",salary:13499.60},{id:"269",label:"21א",salary:14116.77},{id:"270",label:"21ב",salary:14571.49},
+      {id:"271",label:"22",salary:15119.55},{id:"272",label:"22א",salary:15736.72},{id:"273",label:"22ב",salary:16191.43},
+    ]},
+
+  "520": { name:"הגירה - ישן (520)", shortName:"הגירה ישן", number:"520",
+    color:"from-orange-500 to-amber-600", btnActive:"bg-gradient-to-br from-orange-500 to-amber-600", accent:"#ea580c",
+    pensionEmployee:0.07,pensionEmployer:0.135,studyFundEmployee:0.025,studyFundEmployer:0.075,
+    grades:[
+      {id:"10",label:"דרגה 1",salary:5382.87},{id:"20",label:"דרגה 2",salary:5598.18},{id:"30",label:"דרגה 3",salary:5813.49},
+      {id:"40",label:"דרגה 4",salary:6115.67},{id:"50",label:"דרגה 5",salary:6244.12},{id:"60",label:"דרגה 6",salary:6459.44},
+      {id:"70",label:"דרגה 7",salary:6674.75},{id:"80",label:"דרגה 8",salary:6990.39},{id:"90",label:"דרגה 9",salary:7105.38},
+      {id:"100",label:"דרגה 10",salary:7320.69},{id:"110",label:"דרגה 11",salary:7536.01},{id:"120",label:"דרגה 12",salary:7863.88},
+      {id:"130",label:"דרגה 13",salary:8113.45},
+    ]},
+
+  "521": { name:"הגירה - חדש (521)", shortName:"הגירה חדש", number:"521",
+    color:"from-amber-500 to-orange-600", btnActive:"bg-gradient-to-br from-amber-500 to-orange-600", accent:"#d97706",
+    pensionEmployee:0.07,pensionEmployer:0.135,studyFundEmployee:0.025,studyFundEmployer:0.075,
+    grades:[
+      {id:"80",label:"36",salary:6459.45},{id:"82",label:"36א",salary:6822.16},{id:"84",label:"36ב",salary:7275.82},
+      {id:"90",label:"37",salary:6674.75},{id:"92",label:"37א",salary:7035.87},{id:"94",label:"37ב",salary:7422.09},
+      {id:"95",label:"38",salary:6990.39},{id:"96",label:"38א",salary:7279.97},{id:"97",label:"38ב",salary:7572.38},
+      {id:"100",label:"39",salary:7105.38},{id:"102",label:"39א",salary:7491.04},{id:"104",label:"39ב",salary:8112.65},
+      {id:"110",label:"40",salary:7584.09},{id:"112",label:"40א",salary:8205.66},{id:"114",label:"40ב",salary:8827.28},
+      {id:"120",label:"41",salary:8427.57},{id:"122",label:"41א",salary:9049.18},{id:"124",label:"41ב",salary:9670.80},
+      {id:"130",label:"42",salary:9732.18},{id:"132",label:"42א",salary:10353.76},{id:"134",label:"42ב",salary:10975.37},
+      {id:"140",label:"43",salary:11386.33},{id:"142",label:"43א",salary:12007.93},{id:"144",label:"43ב",salary:12629.52},
+      {id:"150",label:"44",salary:12866.55},{id:"152",label:"44א",salary:13568.96},{id:"154",label:"44ב",salary:14271.34},
+    ]},
+
+  "600": { name:"מאבטחי ראש הממשלה והנשיא (600)", shortName:"מאבטחי רה\"מ", number:"600",
+    color:"from-gray-700 to-slate-800", btnActive:"bg-gradient-to-br from-gray-700 to-slate-800", accent:"#374151",
+    pensionEmployee:0.07,pensionEmployer:0.135,studyFundEmployee:0.025,studyFundEmployer:0.075,
+    grades:[
+      {id:"860",label:"חמוש 1 - מחמ\"ץ",salary:47.50*182},{id:"870",label:"חמוש 2 - מחמ\"א",salary:49.00*182},
+      {id:"880",label:"חמוש 3 - קמ\"צ",salary:50.50*182},{id:"890",label:"לא חמוש 3",salary:42.31*182},
+      {id:"900",label:"לא חמוש 2 - מחמ\"א",salary:43.19*182},{id:"910",label:"לא חמוש 1 - קמ\"צ",salary:46.22*182},
+    ]},
+
+  "310": { name:"הגנת עדים קורס (310)", shortName:"הגנ\"ע קורס 310", number:"310",
+    color:"from-violet-600 to-purple-700", btnActive:"bg-gradient-to-br from-violet-600 to-purple-700", accent:"#7c3aed",
+    pensionEmployee:0.07,pensionEmployer:0.135,studyFundEmployee:0.025,studyFundEmployer:0.075,
+    grades:[{id:"1",label:"חניך",salary:7872.14},{id:"2",label:"השלמה",salary:7872.14},{id:"3",label:"רמה 3",salary:7071.75},{id:"4",label:"רמה 4",salary:6540.11}]},
+
+  "320": { name:"הגנת עדים קורס (320)", shortName:"הגנ\"ע קורס 320", number:"320",
+    color:"from-purple-600 to-indigo-700", btnActive:"bg-gradient-to-br from-purple-600 to-indigo-700", accent:"#9333ea",
+    pensionEmployee:0.07,pensionEmployer:0.135,studyFundEmployee:0.025,studyFundEmployer:0.075,
+    grades:[
+      {id:"1",label:"דרגה 1",salary:10019.43},{id:"2",label:"דרגה 2",salary:11398.26},{id:"3",label:"דרגה 3",salary:12774.82},
+      {id:"4",label:"דרגה 4",salary:13901.42},{id:"5",label:"דרגה 5",salary:14904.73},{id:"6",label:"דרגה 6",salary:15655.79},
+      {id:"7",label:"דרגה 7",salary:16656.83},{id:"8",label:"דרגה 8",salary:17283.46},{id:"9",label:"דרגה 9",salary:19287.80},{id:"10",label:"דרגה 10",salary:19928.08},
+    ]},
+
+  "331": { name:"הגנת עדים - ליבה 1 כולל (331)", shortName:"הגנ\"ע ליבה 1 כולל", number:"331",
+    color:"from-fuchsia-600 to-violet-700", btnActive:"bg-gradient-to-br from-fuchsia-600 to-violet-700", accent:"#a21caf",
+    pensionEmployee:0.07,pensionEmployer:0.135,studyFundEmployee:0.025,studyFundEmployer:0.075,
+    grades:[
+      {id:"360",label:"36",salary:9406.35},{id:"361",label:"36א",salary:10272.78},{id:"362",label:"36ב",salary:11139.22},
+      {id:"370",label:"37",salary:9819.61},{id:"371",label:"37א",salary:10704.40},{id:"372",label:"37ב",salary:11585.94},
+      {id:"380",label:"38",salary:10758.36},{id:"381",label:"38א",salary:11702.49},{id:"382",label:"38ב",salary:12649.86},
+      {id:"390",label:"39",salary:11707.11},{id:"391",label:"39א",salary:12767.77},{id:"392",label:"39ב",salary:13830.59},
+      {id:"400",label:"40",salary:13811.23},{id:"401",label:"40א",salary:14943.11},{id:"402",label:"40ב",salary:16073.91},
+      {id:"410",label:"41",salary:15630.95},{id:"411",label:"41א",salary:16785.48},{id:"412",label:"41ב",salary:17937.86},
+      {id:"420",label:"42",salary:18380.53},{id:"421",label:"42א",salary:19553.41},{id:"422",label:"42ב",salary:20727.36},
+      {id:"430",label:"43",salary:21886.67},{id:"431",label:"43א",salary:23082.20},{id:"432",label:"43ב",salary:24276.66},
+    ]},
+
+  "332": { name:"הגנת עדים - ליבה 2 כולל (332)", shortName:"הגנ\"ע ליבה 2 כולל", number:"332",
+    color:"from-violet-500 to-fuchsia-600", btnActive:"bg-gradient-to-br from-violet-500 to-fuchsia-600", accent:"#7c3aed",
+    pensionEmployee:0.07,pensionEmployer:0.135,studyFundEmployee:0.025,studyFundEmployer:0.075,
+    grades:[
+      {id:"360",label:"36",salary:8518.69},{id:"361",label:"36א",salary:9304.22},{id:"362",label:"36ב",salary:10088.65},
+      {id:"370",label:"37",salary:8894.20},{id:"371",label:"37א",salary:9695.90},{id:"372",label:"37ב",salary:10495.45},
+      {id:"380",label:"38",salary:9744.07},{id:"381",label:"38א",salary:10599.72},{id:"382",label:"38ב",salary:11456.45},
+      {id:"390",label:"39",salary:10605.04},{id:"391",label:"39א",salary:11565.36},{id:"392",label:"39ב",salary:12526.76},
+      {id:"400",label:"40",salary:12510.32},{id:"401",label:"40א",salary:13536.45},{id:"402",label:"40ב",salary:14560.42},
+      {id:"410",label:"41",salary:14163.40},{id:"411",label:"41א",salary:15203.56},{id:"412",label:"41ב",salary:16246.95},
+      {id:"420",label:"42",salary:16649.68},{id:"421",label:"42א",salary:17711.43},{id:"422",label:"42ב",salary:18774.24},
+      {id:"430",label:"43",salary:19824.75},{id:"431",label:"43א",salary:20908.08},{id:"432",label:"43ב",salary:21989.23},
+    ]},
+
+  "333": { name:"הגנת עדים - תומך 1 כולל (333)", shortName:"הגנ\"ע תומך 1 כולל", number:"333",
+    color:"from-purple-500 to-violet-600", btnActive:"bg-gradient-to-br from-purple-500 to-violet-600", accent:"#9333ea",
+    pensionEmployee:0.07,pensionEmployer:0.135,studyFundEmployee:0.025,studyFundEmployer:0.075,
+    grades:[
+      {id:"360",label:"36",salary:7973.23},{id:"370",label:"37",salary:8326.51},{id:"380",label:"38",salary:9120.84},
+      {id:"390",label:"39",salary:9925.16},{id:"400",label:"40",salary:11710.43},{id:"410",label:"41",salary:13252.42},
+      {id:"420",label:"42",salary:15584.29},{id:"430",label:"43",salary:18557.17},{id:"432",label:"43ב",salary:20582.47},
+    ]},
+
+  "334": { name:"הגנת עדים - תומך 2 כולל (334)", shortName:"הגנ\"ע תומך 2 כולל", number:"334",
+    color:"from-indigo-500 to-purple-600", btnActive:"bg-gradient-to-br from-indigo-500 to-purple-600", accent:"#4338ca",
+    pensionEmployee:0.07,pensionEmployer:0.135,studyFundEmployee:0.025,studyFundEmployer:0.075,
+    grades:[
+      {id:"360",label:"36",salary:7633.28},{id:"370",label:"37",salary:7969.90},{id:"380",label:"38",salary:8730.89},
+      {id:"390",label:"39",salary:9503.00},{id:"400",label:"40",salary:11209.41},{id:"410",label:"41",salary:12685.85},
+      {id:"420",label:"42",salary:14917.73},{id:"430",label:"43",salary:17763.96},{id:"432",label:"43ב",salary:19702.93},
+    ]},
+
+  "335": { name:"הגנת עדים - מינהלה כולל (335)", shortName:"הגנ\"ע מינהלה כולל", number:"335",
+    color:"from-slate-500 to-violet-600", btnActive:"bg-gradient-to-br from-slate-500 to-violet-600", accent:"#475569",
+    pensionEmployee:0.07,pensionEmployer:0.135,studyFundEmployee:0.025,studyFundEmployer:0.075,
+    grades:[
+      {id:"360",label:"36",salary:7156.69},{id:"370",label:"37",salary:7472.19},{id:"380",label:"38",salary:8185.42},
+      {id:"390",label:"39",salary:8909.75},{id:"400",label:"40",salary:10508.40},{id:"410",label:"41",salary:11893.74},
+      {id:"420",label:"42",salary:13983.42},{id:"430",label:"43",salary:16653.02},{id:"432",label:"43ב",salary:18471.15},
+    ]},
+
+  "336": { name:"הגנת עדים - ליבה 1 לא כולל (336)", shortName:"הגנ\"ע ליבה 1 לא כולל", number:"336",
+    color:"from-red-500 to-rose-600", btnActive:"bg-gradient-to-br from-red-500 to-rose-600", accent:"#dc2626",
+    pensionEmployee:0.07,pensionEmployer:0.135,studyFundEmployee:0.025,studyFundEmployer:0.075,
+    grades:[
+      {id:"360",label:"36",salary:6815.63},{id:"361",label:"36א",salary:7444.68},{id:"362",label:"36ב",salary:8071.59},
+      {id:"370",label:"37",salary:7115.58},{id:"371",label:"37א",salary:7756.51},{id:"372",label:"37ב",salary:8396.37},
+      {id:"380",label:"38",salary:7423.31},{id:"381",label:"38א",salary:8077.18},{id:"382",label:"38ב",salary:8728.90},
+      {id:"390",label:"39",salary:8080.99},{id:"391",label:"39א",salary:8811.47},{id:"392",label:"39ב",salary:9544.11},
+      {id:"400",label:"40",salary:9097.50},{id:"401",label:"40א",salary:9844.17},{id:"402",label:"40ב",salary:10588.68},
+      {id:"410",label:"41",salary:10297.32},{id:"411",label:"41א",salary:11055.86},{id:"412",label:"41ב",salary:11816.56},
+      {id:"420",label:"42",salary:11891.52},{id:"421",label:"42א",salary:12651.14},{id:"422",label:"42ב",salary:13410.76},
+      {id:"430",label:"43",salary:13912.33},{id:"431",label:"43א",salary:14670.87},{id:"432",label:"43ב",salary:15432.65},
+    ]},
+
+  "337": { name:"הגנת עדים - ליבה 2 לא כולל (337)", shortName:"הגנ\"ע ליבה 2 לא כולל", number:"337",
+    color:"from-orange-500 to-red-600", btnActive:"bg-gradient-to-br from-orange-500 to-red-600", accent:"#ea580c",
+    pensionEmployee:0.07,pensionEmployer:0.135,studyFundEmployee:0.025,studyFundEmployer:0.075,
+    grades:[
+      {id:"360",label:"36",salary:6815.63},{id:"370",label:"37",salary:7115.58},{id:"380",label:"38",salary:7423.31},
+      {id:"390",label:"39",salary:8092.10},{id:"400",label:"40",salary:9097.50},{id:"410",label:"41",salary:10297.32},
+      {id:"420",label:"42",salary:11891.52},{id:"430",label:"43",salary:13912.33},
+    ]},
+
+  "338": { name:"הגנת עדים - תומך 1 לא כולל (338)", shortName:"הגנ\"ע תומך 1 לא כולל", number:"338",
+    color:"from-yellow-500 to-orange-600", btnActive:"bg-gradient-to-br from-yellow-500 to-orange-600", accent:"#ca8a04",
+    pensionEmployee:0.07,pensionEmployer:0.135,studyFundEmployee:0.025,studyFundEmployer:0.075,
+    grades:[
+      {id:"360",label:"36",salary:6815.63},{id:"370",label:"37",salary:7115.58},{id:"380",label:"38",salary:7423.31},
+      {id:"390",label:"39",salary:8092.10},{id:"400",label:"40",salary:9097.50},{id:"410",label:"41",salary:10297.32},
+      {id:"420",label:"42",salary:11891.52},{id:"430",label:"43",salary:13912.33},
+    ]},
+
+  "339": { name:"הגנת עדים - תומך 2 לא כולל (339)", shortName:"הגנ\"ע תומך 2 לא כולל", number:"339",
+    color:"from-lime-500 to-yellow-600", btnActive:"bg-gradient-to-br from-lime-500 to-yellow-600", accent:"#65a30d",
+    pensionEmployee:0.07,pensionEmployer:0.135,studyFundEmployee:0.025,studyFundEmployer:0.075,
+    grades:[
+      {id:"360",label:"36",salary:6815.63},{id:"370",label:"37",salary:7115.58},{id:"380",label:"38",salary:7423.31},
+      {id:"390",label:"39",salary:8092.10},{id:"400",label:"40",salary:9097.50},{id:"410",label:"41",salary:10297.32},
+      {id:"420",label:"42",salary:11891.52},{id:"430",label:"43",salary:13912.33},
+    ]},
+
+  "340": { name:"הגנת עדים - מינהלה לא כולל (340)", shortName:"הגנ\"ע מינהלה לא כולל", number:"340",
+    color:"from-teal-500 to-cyan-600", btnActive:"bg-gradient-to-br from-teal-500 to-cyan-600", accent:"#0d9488",
+    pensionEmployee:0.07,pensionEmployer:0.135,studyFundEmployee:0.025,studyFundEmployer:0.075,
+    grades:[
+      {id:"360",label:"36",salary:6815.63},{id:"370",label:"37",salary:7115.58},{id:"380",label:"38",salary:7423.31},
+      {id:"390",label:"39",salary:8092.10},{id:"400",label:"40",salary:9097.50},{id:"410",label:"41",salary:10297.32},
+      {id:"420",label:"42",salary:11891.52},{id:"430",label:"43",salary:13912.33},
+    ]},
+
+  "635": { name:"הגנת עדים - מנודקמים (635)", shortName:"הגנ\"ע מנודקמים", number:"635",
+    color:"from-sky-500 to-indigo-600", btnActive:"bg-gradient-to-br from-sky-500 to-indigo-600", accent:"#0284c7",
+    pensionEmployee:0.07,pensionEmployer:0.135,studyFundEmployee:0.025,studyFundEmployer:0.075,
+    grades:[{id:"10",label:"רמה 1",salary:37.66*182},{id:"20",label:"רמה 2",salary:40.44*182},{id:"30",label:"רמה 3",salary:44.76*182}]},
+
+  "636": { name:"הגנת עדים - רכז ביצוע שעתי (636)", shortName:"הגנ\"ע ביצוע שעתי", number:"636",
+    color:"from-cyan-500 to-sky-600", btnActive:"bg-gradient-to-br from-cyan-500 to-sky-600", accent:"#0891b2",
+    pensionEmployee:0.07,pensionEmployer:0.135,studyFundEmployee:0.025,studyFundEmployer:0.075,
+    grades:[
+      {id:"10",label:"שטח 1",salary:37.44*182},{id:"20",label:"שטח 2",salary:41.96*182},{id:"30",label:"שטח 3",salary:44.92*182},
+      {id:"40",label:"מתקן 1",salary:34.63*182},{id:"50",label:"מתקן 2",salary:40.24*182},{id:"60",label:"מתקן 3",salary:43.06*182},
+    ]},
+
+  "382": { name:"מטה קיברנטי לאומי - גלובלי (382)", shortName:"קיברנטי גלובלי", number:"382",
+    color:"from-emerald-700 to-teal-800", btnActive:"bg-gradient-to-br from-emerald-700 to-teal-800", accent:"#047857",
+    pensionEmployee:0.07,pensionEmployer:0.135,studyFundEmployee:0.025,studyFundEmployer:0.075,
+    grades:[
+      {id:"100",label:"עוזר ראש מדור 1",salary:9629.62},{id:"110",label:"עוזר ראש מדור 2",salary:10833.32},{id:"120",label:"עוזר ראש מדור 3",salary:12037.03},
+      {id:"130",label:"ראש מדור 1",salary:14444.43},{id:"140",label:"ראש מדור 2",salary:15648.14},{id:"150",label:"ראש מדור 3",salary:16851.83},
+      {id:"160",label:"ראש ענף 1",salary:18055.54},{id:"170",label:"ראש ענף 2",salary:19259.23},{id:"180",label:"ראש ענף 3",salary:20462.96},
+      {id:"190",label:"ראש תחום 1",salary:21666.66},{id:"200",label:"ראש תחום 2",salary:22870.35},{id:"210",label:"ראש תחום 3",salary:24074.06},
+      {id:"220",label:"ראש תחום בכיר 1",salary:27685.17},{id:"230",label:"ראש תחום בכיר 2",salary:28888.87},{id:"240",label:"ראש תחום בכיר 3",salary:30423.58},
+      {id:"250",label:"ראש אגף 1",salary:32213.51},{id:"260",label:"ראש אגף 2",salary:33571.03},{id:"270",label:"ראש אגף 3",salary:34928.56},
+      {id:"280",label:"ראש אגף בכיר 1",salary:36286.11},{id:"290",label:"ראש אגף בכיר 2",salary:37643.66},{id:"300",label:"ראש אגף בכיר 3",salary:39001.18},
+    ]},
+
+  "383": { name:"מטה קיברנטי לאומי - לא גלובלי (383)", shortName:"קיברנטי לא גלובלי", number:"383",
+    color:"from-teal-700 to-emerald-800", btnActive:"bg-gradient-to-br from-teal-700 to-emerald-800", accent:"#0f766e",
+    pensionEmployee:0.07,pensionEmployer:0.135,studyFundEmployee:0.025,studyFundEmployer:0.075,
+    grades:[
+      {id:"100",label:"עוזר ראש מדור 1",salary:8511.25},{id:"110",label:"עוזר ראש מדור 2",salary:9575.15},{id:"120",label:"עוזר ראש מדור 3",salary:10639.05},
+      {id:"130",label:"ראש מדור 1",salary:12766.85},{id:"140",label:"ראש מדור 2",salary:13830.77},{id:"150",label:"ראש מדור 3",salary:14894.68},
+      {id:"160",label:"ראש ענף 1",salary:15958.58},{id:"170",label:"ראש ענף 2",salary:17022.49},{id:"180",label:"ראש ענף 3",salary:18086.40},
+      {id:"190",label:"ראש תחום 1",salary:19150.30},{id:"200",label:"ראש תחום 2",salary:20214.21},{id:"210",label:"ראש תחום 3",salary:21278.12},
+      {id:"220",label:"ראש תחום בכיר 1",salary:24469.83},{id:"230",label:"ראש תחום בכיר 2",salary:25533.74},{id:"240",label:"ראש תחום בכיר 3",salary:26890.22},
+      {id:"250",label:"ראש אגף 1",salary:28472.24},{id:"260",label:"ראש אגף 2",salary:29672.11},{id:"270",label:"ראש אגף 3",salary:30871.98},
+    ]},
+
+  "421": { name:"מנהל מערכות מידע ב' (421)", shortName:"מנהל מידע ב'", number:"421",
+    color:"from-cyan-600 to-blue-700", btnActive:"bg-gradient-to-br from-cyan-600 to-blue-700", accent:"#0891b2",
+    pensionEmployee:0.07,pensionEmployer:0.135,studyFundEmployee:0.025,studyFundEmployer:0.075,
+    grades:[{id:"10",label:"רמה 1",salary:26343.21},{id:"20",label:"רמה 2",salary:27541.10},{id:"30",label:"רמה 3",salary:28737.85}]},
+
+  "422": { name:"מנהל טכנולוגיות ופיתוח א' (422)", shortName:"טכנולוגיות א'", number:"422",
+    color:"from-blue-600 to-cyan-700", btnActive:"bg-gradient-to-br from-blue-600 to-cyan-700", accent:"#2563eb",
+    pensionEmployee:0.07,pensionEmployer:0.135,studyFundEmployee:0.025,studyFundEmployer:0.075,
+    grades:[
+      {id:"10",label:"רמה 1",salary:21497.63},{id:"20",label:"רמה 2",salary:22520.78},{id:"30",label:"רמה 3",salary:23545.08},
+      {id:"40",label:"רמה 4",salary:24569.38},{id:"50",label:"רמה 5",salary:25592.53},{id:"60",label:"רמה 6",salary:26616.82},{id:"70",label:"רמה 7",salary:27639.97},
+    ]},
+
+  "423": { name:"מנהל טכנולוגיות ופיתוח ב' (423)", shortName:"טכנולוגיות ב'", number:"423",
+    color:"from-sky-600 to-blue-700", btnActive:"bg-gradient-to-br from-sky-600 to-blue-700", accent:"#0284c7",
+    pensionEmployee:0.07,pensionEmployer:0.135,studyFundEmployee:0.025,studyFundEmployer:0.075,
+    grades:[
+      {id:"10",label:"רמה 1",salary:17403.87},{id:"20",label:"רמה 2",salary:18427.03},{id:"30",label:"רמה 3",salary:19451.34},
+      {id:"40",label:"רמה 4",salary:20474.48},{id:"50",label:"רמה 5",salary:21497.63},{id:"60",label:"רמה 6",salary:22520.78},{id:"70",label:"רמה 7",salary:23545.08},
+    ]},
+
+  "424": { name:"מנהל יישומים א' (424)", shortName:"יישומים א'", number:"424",
+    color:"from-indigo-600 to-blue-700", btnActive:"bg-gradient-to-br from-indigo-600 to-blue-700", accent:"#4338ca",
+    pensionEmployee:0.07,pensionEmployer:0.135,studyFundEmployee:0.025,studyFundEmployer:0.075,
+    grades:[
+      {id:"10",label:"רמה 1",salary:20474.48},{id:"20",label:"רמה 2",salary:21497.63},{id:"30",label:"רמה 3",salary:22520.78},
+      {id:"40",label:"רמה 4",salary:23545.08},{id:"50",label:"רמה 5",salary:24569.38},{id:"60",label:"רמה 6",salary:25592.53},{id:"70",label:"רמה 7",salary:26616.82},
+    ]},
+
+  "425": { name:"מנהל יישומים ב' (425)", shortName:"יישומים ב'", number:"425",
+    color:"from-violet-600 to-indigo-700", btnActive:"bg-gradient-to-br from-violet-600 to-indigo-700", accent:"#7c3aed",
+    pensionEmployee:0.07,pensionEmployer:0.135,studyFundEmployee:0.025,studyFundEmployer:0.075,
+    grades:[
+      {id:"10",label:"רמה 1",salary:16379.59},{id:"20",label:"רמה 2",salary:17403.87},{id:"30",label:"רמה 3",salary:18427.03},
+      {id:"40",label:"רמה 4",salary:19451.34},{id:"50",label:"רמה 5",salary:20474.48},{id:"60",label:"רמה 6",salary:21497.63},{id:"70",label:"רמה 7",salary:22520.78},
+    ]},
+
+  "426": { name:"מנהל אבטחת מידע א' (426)", shortName:"אבטחת מידע א'", number:"426",
+    color:"from-purple-600 to-violet-700", btnActive:"bg-gradient-to-br from-purple-600 to-violet-700", accent:"#9333ea",
+    pensionEmployee:0.07,pensionEmployer:0.135,studyFundEmployee:0.025,studyFundEmployer:0.075,
+    grades:[
+      {id:"10",label:"רמה 1",salary:16379.59},{id:"20",label:"רמה 2",salary:17403.87},{id:"30",label:"רמה 3",salary:18427.03},
+      {id:"40",label:"רמה 4",salary:19451.34},{id:"50",label:"רמה 5",salary:20474.48},{id:"60",label:"רמה 6",salary:21497.63},{id:"70",label:"רמה 7",salary:22520.78},
+    ]},
+
+  "427": { name:"מנהל אבטחת מידע ב' (427)", shortName:"אבטחת מידע ב'", number:"427",
+    color:"from-fuchsia-600 to-purple-700", btnActive:"bg-gradient-to-br from-fuchsia-600 to-purple-700", accent:"#a21caf",
+    pensionEmployee:0.07,pensionEmployer:0.135,studyFundEmployee:0.025,studyFundEmployer:0.075,
+    grades:[
+      {id:"10",label:"רמה 1",salary:13307.84},{id:"20",label:"רמה 2",salary:14332.13},{id:"30",label:"רמה 3",salary:15355.29},
+      {id:"40",label:"רמה 4",salary:16379.59},{id:"50",label:"רמה 5",salary:17403.87},{id:"60",label:"רמה 6",salary:18427.03},{id:"70",label:"רמה 7",salary:19451.34},
+    ]},
+
+  "491": { name:"אב בית דין גיור - ותיקים (491)", shortName:"אב ביה\"ד ותיק", number:"491",
+    color:"from-amber-600 to-yellow-700", btnActive:"bg-gradient-to-br from-amber-600 to-yellow-700", accent:"#d97706",
+    pensionEmployee:0.07,pensionEmployer:0.135,studyFundEmployee:0.025,studyFundEmployer:0.075,
+    grades:[{id:"10",label:"רמה 1",salary:23775.01},{id:"20",label:"רמה 2",salary:25082.74},{id:"30",label:"רמה 3",salary:26462.92}]},
+
+  "492": { name:"אב בית דין גיור - חדשים (492)", shortName:"אב ביה\"ד חדש", number:"492",
+    color:"from-yellow-600 to-amber-700", btnActive:"bg-gradient-to-br from-yellow-600 to-amber-700", accent:"#ca8a04",
+    pensionEmployee:0.07,pensionEmployer:0.135,studyFundEmployee:0.025,studyFundEmployer:0.075,
+    grades:[{id:"10",label:"רמה 1",salary:19686.03},{id:"20",label:"רמה 2",salary:20768.62},{id:"30",label:"רמה 3",salary:21910.08}]},
+
+  "493": { name:"חבר בית דין גיור - ותיקים (493)", shortName:"חבר ביה\"ד ותיק", number:"493",
+    color:"from-orange-600 to-yellow-700", btnActive:"bg-gradient-to-br from-orange-600 to-yellow-700", accent:"#ea580c",
+    pensionEmployee:0.07,pensionEmployer:0.135,studyFundEmployee:0.025,studyFundEmployer:0.075,
+    grades:[{id:"10",label:"רמה 1",salary:20902.00},{id:"20",label:"רמה 2",salary:22051.86}]},
+
+  "494": { name:"חבר בית דין גיור - חדשים (494)", shortName:"חבר ביה\"ד חדש", number:"494",
+    color:"from-amber-500 to-orange-600", btnActive:"bg-gradient-to-br from-amber-500 to-orange-600", accent:"#f59e0b",
+    pensionEmployee:0.07,pensionEmployer:0.135,studyFundEmployee:0.025,studyFundEmployer:0.075,
+    grades:[{id:"10",label:"רמה 1",salary:17686.67},{id:"20",label:"רמה 2",salary:18659.92}]},
+
+  "495": { name:"המרכז הלאומי לבקרת מחלות (495)", shortName:"בקרת מחלות", number:"495",
+    color:"from-red-600 to-rose-700", btnActive:"bg-gradient-to-br from-red-600 to-rose-700", accent:"#dc2626",
+    pensionEmployee:0.07,pensionEmployer:0.135,studyFundEmployee:0.025,studyFundEmployer:0.075,
+    grades:[
+      {id:"10",label:"ב1",salary:8324.33},{id:"20",label:"ב2",salary:8784.17},{id:"30",label:"ב3",salary:9244.01},
+      {id:"40",label:"ב4",salary:9703.85},{id:"50",label:"ב5",salary:10045.43},{id:"60",label:"ב6",salary:10620.24},
+      {id:"70",label:"ב7",salary:11195.04},{id:"80",label:"ב8",salary:14643.86},{id:"90",label:"ב9",salary:15448.58},
+      {id:"100",label:"ב10",salary:16368.27},{id:"110",label:"ב11",salary:17517.88},
+    ]},
+
+  "496": { name:"אב ביה\"ד ותיק ב.מ.י (496)", shortName:"אב ביה\"ד ב.מ.י ותיק", number:"496",
+    color:"from-lime-600 to-green-700", btnActive:"bg-gradient-to-br from-lime-600 to-green-700", accent:"#65a30d",
+    pensionEmployee:0.07,pensionEmployer:0.135,studyFundEmployee:0.025,studyFundEmployer:0.075,
+    grades:[{id:"10",label:"רמה 1",salary:23775.01},{id:"20",label:"רמה 2",salary:25082.74},{id:"30",label:"רמה 3",salary:26462.92}]},
+
+  "497": { name:"אב ביה\"ד חדש ב.מ.י (497)", shortName:"אב ביה\"ד ב.מ.י חדש", number:"497",
+    color:"from-green-600 to-lime-700", btnActive:"bg-gradient-to-br from-green-600 to-lime-700", accent:"#16a34a",
+    pensionEmployee:0.07,pensionEmployer:0.135,studyFundEmployee:0.025,studyFundEmployer:0.075,
+    grades:[{id:"10",label:"רמה 1",salary:20902.00},{id:"20",label:"רמה 2",salary:22051.86}]},
+
+  "286": { name:"מסיימי הליכי גיור (286)", shortName:"מסיימי גיור", number:"286",
+    color:"from-emerald-600 to-teal-700", btnActive:"bg-gradient-to-br from-emerald-600 to-teal-700", accent:"#059669",
+    pensionEmployee:0.07,pensionEmployer:0.135,studyFundEmployee:0.025,studyFundEmployer:0.075,
+    grades:[
+      {id:"1a",label:"בלנית עד 12 מועמדים",salary:161.24*20},{id:"1b",label:"בלנית 13-18 מועמדים",salary:241.84*20},
+      {id:"1c",label:"בלנית 19-25 מועמדים",salary:335.45*20},{id:"2a",label:"ראש צוות עד 12",salary:176.82*20},
+      {id:"2b",label:"ראש צוות 13-18",salary:265.25*20},{id:"2c",label:"ראש צוות 19-25",salary:367.97*20},
+    ]},
+
+  "315": { name:"אנשי דת מוסלמים - פנים (315)", shortName:"דת מוסלמית פנים", number:"315",
+    color:"from-green-700 to-emerald-800", btnActive:"bg-gradient-to-br from-green-700 to-emerald-800", accent:"#15803d",
+    pensionEmployee:0.07,pensionEmployer:0.135,studyFundEmployee:0.025,studyFundEmployer:0.075,
+    grades:[
+      {id:"10",label:"דרגה 1",salary:5042.76},{id:"20",label:"דרגה 2",salary:5673.11},{id:"30",label:"דרגה 3",salary:6303.46},
+      {id:"40",label:"דרגה 4",salary:6933.80},{id:"50",label:"דרגה 5",salary:7564.14},{id:"60",label:"דרגה 6",salary:8194.49},
+      {id:"70",label:"דרגה 7",salary:8824.84},{id:"80",label:"דרגה 8",salary:9455.19},{id:"90",label:"דרגה 9",salary:10085.53},
+    ]},
+
+  "343": { name:"חוקרי המרכז למחקר מדיני (343)", shortName:"מרכז מחקר מדיני", number:"343",
+    color:"from-blue-700 to-indigo-800", btnActive:"bg-gradient-to-br from-blue-700 to-indigo-800", accent:"#1d4ed8",
+    pensionEmployee:0.07,pensionEmployer:0.135,studyFundEmployee:0.025,studyFundEmployer:0.075,
+    grades:[
+      {id:"39",label:"עוזר מחקר 39",salary:9148.43},{id:"39א",label:"עוזר מחקר 39א",salary:9653.56},{id:"39ב",label:"עוזר מחקר 39ב",salary:10158.71},
+      {id:"40",label:"חוקר 40",salary:10684.05},{id:"40א",label:"חוקר 40א",salary:11236.71},{id:"40ב",label:"חוקר 40ב",salary:11694.32},
+      {id:"41",label:"חוקר בכיר 41",salary:12491.69},{id:"41א",label:"חוקר בכיר 41א",salary:12996.81},{id:"41ב",label:"חוקר בכיר 41ב",salary:13501.97},
+      {id:"42",label:"מעריך 42",salary:13845.54},{id:"42א",label:"מעריך 42א",salary:14350.66},{id:"42ב",label:"מעריך 42ב",salary:14855.83},
+      {id:"43",label:"מעריך בכיר 43",salary:15347.04},{id:"43א",label:"מעריך בכיר 43א",salary:16682.01},{id:"43ב",label:"מעריך בכיר 43ב",salary:17187.16},
+    ]},
+
+  "123": { name:"חוקרי תאונות אוויריות (123)", shortName:"חוקרי תאונות אוויר", number:"123",
+    color:"from-sky-600 to-indigo-700", btnActive:"bg-gradient-to-br from-sky-600 to-indigo-700", accent:"#0284c7",
+    pensionEmployee:0.07,pensionEmployer:0.135,studyFundEmployee:0.025,studyFundEmployer:0.075,
+    grades:[{id:"400",label:"חוקר ב' (שעתי)",salary:158.87*182},{id:"500",label:"חוקר א' (שעתי)",salary:183.51*182}]},
+
+  "512": { name:"מטאורולוגים - משרד התחבורה (512)", shortName:"מטאורולוגים", number:"512",
+    color:"from-sky-500 to-blue-600", btnActive:"bg-gradient-to-br from-sky-500 to-blue-600", accent:"#0ea5e9",
+    pensionEmployee:0.07,pensionEmployer:0.135,studyFundEmployee:0.025,studyFundEmployer:0.075,
+    grades:[
+      {id:"38",label:"מרכז 38",salary:8472.87},{id:"38א",label:"מרכז 38א",salary:9046.46},{id:"38ב",label:"מרכז 38ב",salary:9620.06},
+      {id:"39",label:"מרכז בכיר 39",salary:10243.32},{id:"39א",label:"39א",salary:10816.91},{id:"39ב",label:"39ב",salary:11390.50},
+      {id:"40",label:"מנהל גף 40",salary:12013.76},{id:"40א",label:"40א",salary:12587.35},{id:"40ב",label:"40ב",salary:13160.94},
+      {id:"41",label:"מנהל גף 41",salary:13784.20},{id:"41א",label:"41א",salary:14357.80},{id:"41ב",label:"41ב",salary:14931.39},
+      {id:"42",label:"מנהל תחום 42",salary:15047.55},{id:"42א",label:"42א",salary:15602.45},{id:"42ב",label:"42ב",salary:16157.34},
+      {id:"43",label:"מנהל תחום בכיר 43",salary:16100.87},{id:"43א",label:"43א",salary:16655.77},{id:"43ב",label:"43ב",salary:17210.67},
+    ]},
+
+  "188": { name:"בודק כלי שיט קטנים (188)", shortName:"בודק כלי שיט 188", number:"188",
+    color:"from-cyan-600 to-blue-700", btnActive:"bg-gradient-to-br from-cyan-600 to-blue-700", accent:"#0891b2",
+    pensionEmployee:0.07,pensionEmployer:0.135,studyFundEmployee:0.025,studyFundEmployer:0.075,
+    grades:[{id:"1",label:"רמה א'",salary:74.11*182},{id:"2",label:"רמה ב'",salary:90.42*182},{id:"3",label:"רמה ג'",salary:105.77*182}]},
+
+  "688": { name:"בודקי כלי שיט קטנים (688)", shortName:"בודק כלי שיט 688", number:"688",
+    color:"from-blue-600 to-cyan-700", btnActive:"bg-gradient-to-br from-blue-600 to-cyan-700", accent:"#2563eb",
+    pensionEmployee:0.07,pensionEmployer:0.135,studyFundEmployee:0.025,studyFundEmployer:0.075,
+    grades:[{id:"1",label:"רמה א'",salary:74.11*182},{id:"2",label:"רמה ב'",salary:90.42*182},{id:"3",label:"רמה ג'",salary:105.77*182}]},
+
+  "561": { name:"עוזרים משפטיים - ביהמ\"ש העליון (561)", shortName:"עוזרים עליון", number:"561",
+    color:"from-amber-700 to-yellow-800", btnActive:"bg-gradient-to-br from-amber-700 to-yellow-800", accent:"#b45309",
+    pensionEmployee:0.07,pensionEmployer:0.135,studyFundEmployee:0.025,studyFundEmployer:0.075,
+    grades:[
+      {id:"210",label:"א - דרגה 1",salary:12946.24},{id:"220",label:"א - דרגה 2",salary:13942.10},
+      {id:"230",label:"א - דרגה 3",salary:14937.96},{id:"240",label:"א - דרגה 4",salary:15933.83},
+      {id:"310",label:"ב - דרגה 1",salary:16929.69},{id:"320",label:"ב - דרגה 2",salary:17925.56},
+      {id:"330",label:"ב - דרגה 3",salary:18921.42},{id:"340",label:"ב - דרגה 4",salary:19917.29},
+    ]},
+
+  "588": { name:"בוחני רישוי (588)", shortName:"בוחני רישוי", number:"588",
+    color:"from-teal-600 to-cyan-700", btnActive:"bg-gradient-to-br from-teal-600 to-cyan-700", accent:"#0891b2",
+    pensionEmployee:0.07,pensionEmployer:0.135,studyFundEmployee:0.025,studyFundEmployer:0.075,
+    grades:[
+      {id:"1",label:"רמה 1",salary:9878.20},{id:"2",label:"רמה 2",salary:10135.99},{id:"3",label:"רמה 3",salary:10383.57},
+      {id:"4",label:"רמה 4",salary:10631.12},{id:"5",label:"רמה 5",salary:10897.00},{id:"6",label:"רמה 6",salary:11169.00},
+    ]},
+
+  "516": { name:"מזכירות - לשכות שרים ומנכ\"לים (516)", shortName:"מזכירות לשכות שרים", number:"516",
+    color:"from-pink-600 to-rose-700", btnActive:"bg-gradient-to-br from-pink-600 to-rose-700", accent:"#db2777",
+    pensionEmployee:0.07,pensionEmployer:0.135,studyFundEmployee:0.025,studyFundEmployer:0.075,
+    grades:[
+      {id:"10",label:"דרגה 1",salary:6786.70},{id:"20",label:"דרגה 2",salary:7352.26},{id:"30",label:"דרגה 3",salary:7917.82},
+      {id:"40",label:"דרגה 4",salary:8483.38},{id:"50",label:"דרגה 5",salary:9048.94},{id:"60",label:"דרגה 6",salary:9614.50},
+    ]},
+
+  "517": { name:"יועצים ועוזרים - לשכות שרים ומנכ\"לים (517)", shortName:"יועצים לשכות שרים", number:"517",
+    color:"from-rose-600 to-pink-700", btnActive:"bg-gradient-to-br from-rose-600 to-pink-700", accent:"#e11d48",
+    pensionEmployee:0.07,pensionEmployer:0.135,studyFundEmployee:0.025,studyFundEmployer:0.075,
+    grades:[
+      {id:"70",label:"דרגה 7",salary:10180.06},{id:"80",label:"דרגה 8",salary:11311.18},{id:"90",label:"דרגה 9",salary:12442.27},
+      {id:"100",label:"דרגה 10",salary:13573.39},{id:"110",label:"דרגה 11",salary:14704.51},{id:"120",label:"דרגה 12",salary:15835.63},
+      {id:"130",label:"דרגה 13",salary:16966.75},{id:"140",label:"דרגה 14",salary:18097.87},{id:"150",label:"דרגה 15",salary:19228.98},
+      {id:"160",label:"דרגה 16",salary:20360.09},{id:"170",label:"דרגה 17",salary:21491.21},{id:"180",label:"דרגה 18",salary:22622.33},
+    ]},
+
+  "166": { name:"גאוגרפים - נ\"רים (166)", shortName:"גאוגרפים נ\"ר", number:"166",
+    color:"from-emerald-600 to-green-700", btnActive:"bg-gradient-to-br from-emerald-600 to-green-700", accent:"#059669",
+    pensionEmployee:0.07,pensionEmployer:0.135,studyFundEmployee:0.025,studyFundEmployer:0.075,
+    grades:[
+      {id:"40",label:"דרגה 4",salary:14955.19},{id:"50",label:"דרגה 5",salary:16255.64},{id:"60",label:"דרגה 6",salary:17556.09},
+      {id:"70",label:"דרגה 7",salary:18960.58},{id:"80",label:"דרגה 8",salary:20477.43},{id:"90",label:"דרגה 9",salary:22115.62},
+    ]},
+
+  "134": { name:"פרמקאים (134)", shortName:"פרמקאים", number:"134",
+    color:"from-green-600 to-teal-700", btnActive:"bg-gradient-to-br from-green-600 to-teal-700", accent:"#16a34a",
+    pensionEmployee:0.07,pensionEmployer:0.135,studyFundEmployee:0.025,studyFundEmployer:0.075,
+    grades:[
+      {id:"1",label:"דרגה 1",salary:9266.40},{id:"2",label:"דרגה 2",salary:9781.20},{id:"3",label:"דרגה 3",salary:10810.80},
+      {id:"4",label:"דרגה 4",salary:11840.40},{id:"5",label:"דרגה 5",salary:13384.80},{id:"6",label:"דרגה 6",salary:14929.20},
+      {id:"7",label:"דרגה 7",salary:15958.80},{id:"8",label:"דרגה 8",salary:16988.40},{id:"9",label:"דרגה 9",salary:18018.00},
+    ]},
+
+  "195": { name:"מפקחי מזון (195)", shortName:"מפקחי מזון", number:"195",
+    color:"from-lime-600 to-green-700", btnActive:"bg-gradient-to-br from-lime-600 to-green-700", accent:"#65a30d",
+    pensionEmployee:0.07,pensionEmployer:0.135,studyFundEmployee:0.025,studyFundEmployer:0.075,
+    grades:[
+      {id:"1",label:"רמה 1",salary:8236.80},{id:"2",label:"רמה 2",salary:8648.64},{id:"3",label:"רמה 3",salary:9060.48},
+      {id:"4",label:"רמה 4",salary:9472.32},{id:"5",label:"רמה 5",salary:9884.16},{id:"6",label:"רמה 6",salary:10913.76},
+      {id:"7",label:"רמה 7",salary:12355.20},{id:"8",label:"רמה 8",salary:14517.36},
+    ]},
+
+  "204": { name:"מהנדסים וטכנאים בכבאות (204)", shortName:"כבאות מהנדסים", number:"204",
+    color:"from-orange-600 to-red-700", btnActive:"bg-gradient-to-br from-orange-600 to-red-700", accent:"#ea580c",
+    pensionEmployee:0.07,pensionEmployer:0.135,studyFundEmployee:0.025,studyFundEmployer:0.075,
+    grades:[
+      {id:"80",label:"36",salary:7724.05},{id:"82",label:"36א",salary:8435.69},{id:"84",label:"36ב",salary:9147.32},
+      {id:"90",label:"37",salary:7906.77},{id:"92",label:"37א",salary:8617.84},{id:"94",label:"37ב",salary:9328.90},
+      {id:"95",label:"38",salary:8089.79},{id:"96",label:"38א",salary:8800.86},{id:"97",label:"38ב",salary:9511.91},
+      {id:"100",label:"39",salary:8638.67},{id:"102",label:"39א",salary:9421.14},{id:"104",label:"39ב",salary:10203.64},
+      {id:"110",label:"40",salary:9547.07},{id:"112",label:"40א",salary:10329.52},{id:"114",label:"40ב",salary:11112.02},
+      {id:"120",label:"41",salary:10608.89},{id:"122",label:"41א",salary:11391.38},{id:"124",label:"41ב",salary:12173.90},
+      {id:"130",label:"42",salary:12251.17},{id:"132",label:"42א",salary:13033.63},{id:"134",label:"42ב",salary:13816.13},
+      {id:"140",label:"43",salary:14333.44},{id:"142",label:"43א",salary:15115.93},{id:"144",label:"43ב",salary:15898.39},
+    ]},
+
+  "264": { name:"נהגי שרים ומנכ\"לים (264)", shortName:"נהגי שרים 264", number:"264",
+    color:"from-slate-600 to-gray-700", btnActive:"bg-gradient-to-br from-slate-600 to-gray-700", accent:"#475569",
+    pensionEmployee:0.07,pensionEmployer:0.135,studyFundEmployee:0.025,studyFundEmployer:0.075,
+    grades:[
+      {id:"500",label:"נ.שר א",salary:13854.66},{id:"502",label:"נ.שר ב",salary:14408.61},{id:"506",label:"נ.שר ג",salary:14984.38},
+      {id:"520",label:"נ.סגן.שר א",salary:12752.56},{id:"522",label:"נ.סגן.שר ב",salary:13262.91},{id:"526",label:"נ.סגן.שר ג",salary:13793.59},
+      {id:"540",label:"נ.מ.נ.מ א",salary:11650.47},{id:"542",label:"נ.מ.נ.מ ב",salary:12117.20},{id:"546",label:"נ.מ.נ.מ ג",salary:12601.37},
+      {id:"508",label:"נ.רה\"מ ג'",salary:16061.46},
+    ]},
+
+  "265": { name:"בוחני פטנטים א' (265)", shortName:"פטנטים א'", number:"265",
+    color:"from-indigo-700 to-blue-800", btnActive:"bg-gradient-to-br from-indigo-700 to-blue-800", accent:"#3730a3",
+    pensionEmployee:0.07,pensionEmployer:0.135,studyFundEmployee:0.025,studyFundEmployer:0.075,
+    grades:[
+      {id:"10",label:"רמה 1",salary:9451.37},{id:"20",label:"רמה 2",salary:10563.63},{id:"30",label:"רמה 3",salary:11674.75},
+      {id:"40",label:"רמה 4",salary:12787.01},{id:"50",label:"רמה 5",salary:13899.28},{id:"60",label:"רמה 6",salary:15010.38},
+      {id:"70",label:"רמה 7",salary:16122.65},{id:"80",label:"רמה 8",salary:17234.92},{id:"90",label:"רמה 9",salary:18347.19},
+      {id:"100",label:"רמה 10",salary:19458.30},{id:"110",label:"רמה 11",salary:20570.56},
+    ]},
+
+  "266": { name:"בוחני פטנטים ב' (266)", shortName:"פטנטים ב'", number:"266",
+    color:"from-blue-700 to-indigo-800", btnActive:"bg-gradient-to-br from-blue-700 to-indigo-800", accent:"#1d4ed8",
+    pensionEmployee:0.07,pensionEmployer:0.135,studyFundEmployee:0.025,studyFundEmployer:0.075,
+    grades:[
+      {id:"10",label:"רמה 1",salary:9948.51},{id:"20",label:"רמה 2",salary:11119.28},{id:"30",label:"רמה 3",salary:12288.84},
+      {id:"40",label:"רמה 4",salary:13459.61},{id:"50",label:"רמה 5",salary:14630.38},{id:"60",label:"רמה 6",salary:15799.93},
+      {id:"70",label:"רמה 7",salary:16970.70},{id:"80",label:"רמה 8",salary:18141.47},{id:"90",label:"רמה 9",salary:19312.26},
+      {id:"100",label:"רמה 10",salary:20481.80},{id:"110",label:"רמה 11",salary:21652.57},
+    ]},
+
+  "165": { name:"בוחני פטנטים - צוערים (165)", shortName:"פטנטים צוערים", number:"165",
+    color:"from-sky-700 to-blue-800", btnActive:"bg-gradient-to-br from-sky-700 to-blue-800", accent:"#0369a1",
+    pensionEmployee:0.07,pensionEmployer:0.135,studyFundEmployee:0.025,studyFundEmployer:0.075,
+    grades:[{id:"10",label:"דרגה 1",salary:6892.39},{id:"20",label:"דרגה 2",salary:7672.66},{id:"30",label:"דרגה 3",salary:8452.93}]},
+
+  "525": { name:"אזרח ותיק (525)", shortName:"אזרח ותיק", number:"525",
+    color:"from-slate-500 to-zinc-600", btnActive:"bg-gradient-to-br from-slate-500 to-zinc-600", accent:"#64748b",
+    pensionEmployee:0.07,pensionEmployer:0.135,studyFundEmployee:0.025,studyFundEmployer:0.075,
+    grades:[{id:"90",label:"מינהלי (שעתי)",salary:33.27*182},{id:"120",label:"מקצועי (שעתי)",salary:44.64*182}]},
+
+  "787": { name:"צוערים (787)", shortName:"צוערים 787", number:"787",
+    color:"from-orange-700 to-amber-700", btnActive:"bg-gradient-to-br from-orange-700 to-amber-700", accent:"#c2410c",
+    pensionEmployee:0.07,pensionEmployer:0.135,studyFundEmployee:0.025,studyFundEmployer:0.075,
+    grades:[
+      {id:"409",label:"צוער",salary:6906.44},{id:"410",label:"צוער ותיק",salary:7555.71},{id:"411",label:"צוע.א1",salary:7374.62},
+      {id:"412",label:"צוע.א2",salary:7842.79},{id:"413",label:"צוע.ב1 ותיק",salary:8023.88},{id:"414",label:"צוע.ב2 ותיק",salary:8492.05},
+    ]},
+
+  // ── כל הדירוגים החסרים מה-PDF ──
+
+  "10": { name:"איכות הסביבה (10)", shortName:"איכות סביבה 10", number:"10",
+    color:"from-green-500 to-lime-600", btnActive:"bg-gradient-to-br from-green-500 to-lime-600", accent:"#22c55e",
+    pensionEmployee:0.07,pensionEmployer:0.135,studyFundEmployee:0.025,studyFundEmployer:0.075,
+    grades:[
+      {id:"180",label:"15",salary:7938.55},{id:"182",label:"15א",salary:8555.70},{id:"183",label:"15ב",salary:9010.41},
+      {id:"190",label:"16",salary:8535.69},{id:"192",label:"16א",salary:9152.86},{id:"193",label:"16ב",salary:9607.58},
+      {id:"200",label:"17",salary:9265.30},{id:"202",label:"17א",salary:9882.45},{id:"203",label:"17ב",salary:10337.17},
+      {id:"210",label:"18",salary:9982.89},{id:"212",label:"18א",salary:10600.08},{id:"213",label:"18ב",salary:11054.79},
+      {id:"220",label:"19",salary:10947.66},{id:"222",label:"19א",salary:11564.82},{id:"223",label:"19ב",salary:12019.53},
+      {id:"230",label:"20",salary:12118.13},{id:"232",label:"20א",salary:12735.31},{id:"233",label:"20ב",salary:13190.02},
+    ]},
+
+  "510": { name:"איכות הסביבה (510)", shortName:"איכות סביבה 510", number:"510",
+    color:"from-lime-500 to-green-600", btnActive:"bg-gradient-to-br from-lime-500 to-green-600", accent:"#84cc16",
+    pensionEmployee:0.07,pensionEmployer:0.135,studyFundEmployee:0.025,studyFundEmployer:0.075,
+    grades:[
+      {id:"180",label:"15",salary:7938.56},{id:"182",label:"15א",salary:8555.71},{id:"183",label:"15ב",salary:9010.42},
+      {id:"190",label:"16",salary:8535.69},{id:"192",label:"16א",salary:9152.86},{id:"193",label:"16ב",salary:9607.57},
+      {id:"200",label:"17",salary:9265.30},{id:"202",label:"17א",salary:9882.45},{id:"203",label:"17ב",salary:10337.17},
+      {id:"210",label:"18",salary:9982.89},{id:"212",label:"18א",salary:10600.08},{id:"213",label:"18ב",salary:11054.79},
+      {id:"220",label:"19",salary:10947.65},{id:"222",label:"19א",salary:11564.81},{id:"223",label:"19ב",salary:12019.53},
+      {id:"230",label:"20",salary:12118.12},{id:"232",label:"20א",salary:12735.30},{id:"233",label:"20ב",salary:13190.02},
+    ]},
+
+  "552": { name:"איכות הסביבה חדש (552)", shortName:"איכות סביבה 552", number:"552",
+    color:"from-emerald-500 to-lime-600", btnActive:"bg-gradient-to-br from-emerald-500 to-lime-600", accent:"#10b981",
+    pensionEmployee:0.07,pensionEmployer:0.135,studyFundEmployee:0.025,studyFundEmployer:0.075,
+    grades:[
+      {id:"180",label:"15",salary:7017.07},{id:"182",label:"15א",salary:7562.59},{id:"183",label:"15ב",salary:7964.52},
+      {id:"190",label:"16",salary:7544.90},{id:"192",label:"16א",salary:8090.44},{id:"193",label:"16ב",salary:8492.37},
+      {id:"200",label:"17",salary:8189.82},{id:"202",label:"17א",salary:8735.34},{id:"203",label:"17ב",salary:9137.27},
+      {id:"210",label:"18",salary:8824.11},{id:"212",label:"18א",salary:9369.66},{id:"213",label:"18ב",salary:9771.59},
+      {id:"220",label:"19",salary:9676.90},{id:"222",label:"19א",salary:10222.42},{id:"223",label:"19ב",salary:10624.35},
+      {id:"230",label:"20",salary:10711.51},{id:"232",label:"20א",salary:11257.04},{id:"233",label:"20ב",salary:11658.98},
+      {id:"234",label:"21",salary:11782.66},{id:"235",label:"21א",salary:12328.19},{id:"236",label:"21ב",salary:12730.13},
+      {id:"237",label:"22",salary:13042.22},{id:"238",label:"22א",salary:13587.75},{id:"239",label:"22ב",salary:13989.69},
+    ]},
+
+  "14": { name:"כלכלנים נבחרים - ותיק (14)", shortName:"כלכלנים ותיק 14", number:"14",
+    color:"from-sky-600 to-blue-700", btnActive:"bg-gradient-to-br from-sky-600 to-blue-700", accent:"#0284c7",
+    pensionEmployee:0.07,pensionEmployer:0.135,studyFundEmployee:0.025,studyFundEmployer:0.075,
+    grades:[
+      {id:"100",label:"39",salary:10773.77},{id:"102",label:"39א",salary:11368.66},{id:"104",label:"39ב",salary:11963.56},
+      {id:"110",label:"40",salary:12582.23},{id:"112",label:"40א",salary:13177.10},{id:"114",label:"40ב",salary:13771.98},
+      {id:"120",label:"41",salary:14711.04},{id:"122",label:"41א",salary:15305.90},{id:"124",label:"41ב",salary:15900.80},
+      {id:"130",label:"42",salary:16305.40},{id:"132",label:"42א",salary:16900.27},{id:"134",label:"42ב",salary:17495.18},
+      {id:"140",label:"43",salary:18073.67},{id:"142",label:"43א",salary:19645.83},{id:"144",label:"43ב",salary:20240.73},
+      {id:"150",label:"44",salary:20423.26},{id:"152",label:"44א",salary:22199.79},{id:"154",label:"44ב",salary:22872.03},
+      {id:"200",label:"משופר 1",salary:19226.71},{id:"202",label:"משופר 1א",salary:20347.15},{id:"204",label:"משופר 1ב",salary:21467.59},
+      {id:"210",label:"משופר 2",salary:21790.27},{id:"212",label:"משופר 2א",salary:23035.20},{id:"214",label:"משופר 2ב",salary:24404.62},
+    ]},
+
+  "87": { name:"עובדים חיוניים אקדמאים - ותיק (87)", shortName:"אקדמאים ותיק 87", number:"87",
+    color:"from-teal-600 to-emerald-700", btnActive:"bg-gradient-to-br from-teal-600 to-emerald-700", accent:"#0d9488",
+    pensionEmployee:0.07,pensionEmployer:0.135,studyFundEmployee:0.025,studyFundEmployer:0.075,
+    grades:[
+      {id:"80",label:"36",salary:6135.89},{id:"82",label:"36א",salary:6701.20},{id:"84",label:"36ב",salary:7266.52},
+      {id:"90",label:"37",salary:6281.05},{id:"92",label:"37א",salary:6845.92},{id:"94",label:"37ב",salary:7410.76},
+      {id:"95",label:"38",salary:6426.44},{id:"96",label:"38א",salary:6991.30},{id:"97",label:"38ב",salary:7556.16},
+      {id:"100",label:"39",salary:6862.46},{id:"102",label:"39א",salary:7484.05},{id:"104",label:"39ב",salary:8105.66},
+      {id:"110",label:"40",salary:7584.09},{id:"112",label:"40א",salary:8205.65},{id:"114",label:"40ב",salary:8827.28},
+      {id:"120",label:"41",salary:8427.57},{id:"122",label:"41א",salary:9049.17},{id:"124",label:"41ב",salary:9670.80},
+      {id:"130",label:"42",salary:9732.18},{id:"132",label:"42א",salary:10353.76},{id:"134",label:"42ב",salary:10975.38},
+      {id:"140",label:"43",salary:11386.32},{id:"142",label:"43א",salary:12007.94},{id:"144",label:"43ב",salary:12629.52},
+      {id:"150",label:"44",salary:12866.55},{id:"152",label:"44א",salary:13568.96},{id:"154",label:"44ב",salary:14271.35},
+    ]},
+
+  "587": { name:"עובדים חיוניים אקדמאים - חדש (587)", shortName:"אקדמאים חדש 587", number:"587",
+    color:"from-emerald-600 to-teal-700", btnActive:"bg-gradient-to-br from-emerald-600 to-teal-700", accent:"#059669",
+    pensionEmployee:0.07,pensionEmployer:0.135,studyFundEmployee:0.025,studyFundEmployer:0.075,
+    grades:[
+      {id:"80",label:"36",salary:6135.89},{id:"82",label:"36א",salary:6701.20},{id:"84",label:"36ב",salary:7266.52},
+      {id:"90",label:"37",salary:6281.05},{id:"92",label:"37א",salary:6845.92},{id:"94",label:"37ב",salary:7410.76},
+      {id:"95",label:"38",salary:6426.44},{id:"96",label:"38א",salary:6991.30},{id:"97",label:"38ב",salary:7556.16},
+      {id:"100",label:"39",salary:6862.46},{id:"102",label:"39א",salary:7484.05},{id:"104",label:"39ב",salary:8105.66},
+      {id:"110",label:"40",salary:7584.09},{id:"112",label:"40א",salary:8205.65},{id:"114",label:"40ב",salary:8827.28},
+      {id:"120",label:"41",salary:8427.57},{id:"122",label:"41א",salary:9049.17},{id:"124",label:"41ב",salary:9670.80},
+      {id:"130",label:"42",salary:9732.18},{id:"132",label:"42א",salary:10353.76},{id:"134",label:"42ב",salary:10975.38},
+      {id:"140",label:"43",salary:11386.32},{id:"142",label:"43א",salary:12007.94},{id:"144",label:"43ב",salary:12629.52},
+      {id:"150",label:"44",salary:12866.55},{id:"152",label:"44א",salary:13568.96},{id:"154",label:"44ב",salary:14271.35},
+    ]},
+
+  "187": { name:"עובדים חיוניים משפטנים - חדש (187)", shortName:"משפטנים חדש 187", number:"187",
+    color:"from-cyan-600 to-sky-700", btnActive:"bg-gradient-to-br from-cyan-600 to-sky-700", accent:"#0891b2",
+    pensionEmployee:0.07,pensionEmployer:0.135,studyFundEmployee:0.025,studyFundEmployer:0.075,
+    grades:[
+      {id:"300",label:"ג",salary:7769.58},{id:"301",label:"ג1",salary:8315.23},{id:"302",label:"ג2",salary:8860.88},
+      {id:"303",label:"ב51",salary:8197.64},{id:"304",label:"ב52",salary:8743.29},{id:"305",label:"ב53",salary:9288.95},
+      {id:"312",label:"א",salary:10488.84},{id:"315",label:"א3",salary:11041.59},{id:"318",label:"א6",salary:11594.33},
+      {id:"322",label:"א10",salary:11553.73},{id:"325",label:"א13",salary:12106.48},{id:"328",label:"א16",salary:12659.22},
+      {id:"332",label:"א20",salary:12935.98},{id:"335",label:"א23",salary:13488.72},{id:"338",label:"א26",salary:14041.46},
+      {id:"342",label:"א30",salary:14728.86},{id:"345",label:"א33",salary:15281.60},{id:"348",label:"א36",salary:15834.35},
+      {id:"352",label:"א40",salary:16807.54},{id:"355",label:"א43",salary:17360.28},{id:"358",label:"א46",salary:17913.02},
+      {id:"362",label:"ב2",salary:8893.86},{id:"365",label:"ב3",salary:9446.61},{id:"368",label:"ב6",salary:9999.36},
+      {id:"372",label:"ב20",salary:9604.49},{id:"375",label:"ב23",salary:10157.26},{id:"378",label:"ב26",salary:10710.00},
+      {id:"401",label:"א50",salary:19328.67},{id:"403",label:"א53",salary:19964.33},{id:"405",label:"א56",salary:20599.98},
+    ]},
+
+  "987": { name:"עובדים חיוניים משפטנים - ותיק (987)", shortName:"משפטנים ותיק 987", number:"987",
+    color:"from-sky-700 to-cyan-800", btnActive:"bg-gradient-to-br from-sky-700 to-cyan-800", accent:"#0369a1",
+    pensionEmployee:0.07,pensionEmployer:0.135,studyFundEmployee:0.025,studyFundEmployer:0.075,
+    grades:[
+      {id:"300",label:"ג",salary:7769.58},{id:"301",label:"ג1",salary:8315.23},{id:"302",label:"ג2",salary:8860.88},
+      {id:"303",label:"ב51",salary:8197.64},{id:"304",label:"ב52",salary:8743.29},{id:"305",label:"ב53",salary:9288.95},
+      {id:"312",label:"א",salary:10488.84},{id:"315",label:"א3",salary:11041.59},{id:"318",label:"א6",salary:11594.33},
+      {id:"322",label:"א10",salary:11553.73},{id:"325",label:"א13",salary:12106.48},{id:"328",label:"א16",salary:12659.22},
+      {id:"332",label:"א20",salary:12935.98},{id:"335",label:"א23",salary:13488.72},{id:"338",label:"א26",salary:14041.46},
+      {id:"342",label:"א30",salary:14728.86},{id:"345",label:"א33",salary:15281.60},{id:"348",label:"א36",salary:15834.35},
+      {id:"352",label:"א40",salary:16807.54},{id:"355",label:"א43",salary:17360.28},{id:"358",label:"א46",salary:17913.02},
+      {id:"362",label:"ב2",salary:8893.86},{id:"365",label:"ב3",salary:9446.61},{id:"368",label:"ב6",salary:9999.36},
+      {id:"372",label:"ב20",salary:9604.49},{id:"375",label:"ב23",salary:10157.26},{id:"378",label:"ב26",salary:10710.00},
+      {id:"401",label:"א50",salary:19328.67},{id:"403",label:"א53",salary:19964.33},{id:"405",label:"א56",salary:20599.98},
+    ]},
+
+  "64": { name:"לשכות שר ומנכ\"ל - ישן (64)", shortName:"לשכות שר/מנכ\"ל ישן", number:"64",
+    color:"from-amber-600 to-yellow-700", btnActive:"bg-gradient-to-br from-amber-600 to-yellow-700", accent:"#d97706",
+    pensionEmployee:0.07,pensionEmployer:0.135,studyFundEmployee:0.025,studyFundEmployer:0.075,
+    grades:[
+      {id:"80",label:"א",salary:7842.60},{id:"82",label:"ב",salary:8567.68},
+      {id:"90",label:"ג",salary:8548.44},{id:"92",label:"ד",salary:9338.77},
+      {id:"95",label:"ה",salary:9108.49},{id:"96",label:"ו",salary:9501.72},{id:"97",label:"ז",salary:10952.97},
+      {id:"100",label:"ח",salary:9974.06},{id:"102",label:"ט",salary:10896.32},{id:"104",label:"י",salary:11818.57},
+      {id:"110",label:"יא",salary:11024.30},{id:"112",label:"יב",salary:11946.57},{id:"114",label:"יג",salary:12868.82},
+      {id:"120",label:"יד",salary:12252.02},{id:"122",label:"טו",salary:13174.24},{id:"124",label:"טז",salary:14096.50},
+      {id:"130",label:"יז",salary:14024.21},{id:"132",label:"יח",salary:14946.46},{id:"134",label:"יט",salary:15868.72},
+      {id:"140",label:"כ",salary:16407.84},{id:"142",label:"כא",salary:17330.12},{id:"144",label:"כב",salary:18252.36},
+      {id:"146",label:"כג",salary:19252.94},{id:"265",label:"כד",salary:25580.82},
+    ]},
+
+  "148": { name:"מנהל ומשק - חדש (148)", shortName:"מנהל ומשק 148", number:"148",
+    color:"from-teal-600 to-cyan-700", btnActive:"bg-gradient-to-br from-teal-600 to-cyan-700", accent:"#0891b2",
+    pensionEmployee:0.07,pensionEmployer:0.135,studyFundEmployee:0.025,studyFundEmployer:0.075,
+    grades:[
+      {id:"100",label:"37",salary:7211.69},{id:"101",label:"37א",salary:7768.71},{id:"102",label:"37ב",salary:8325.75},
+      {id:"110",label:"38",salary:7499.02},{id:"111",label:"38א",salary:8056.05},{id:"112",label:"38ב",salary:8613.07},
+      {id:"120",label:"39",salary:8058.92},{id:"121",label:"39א",salary:8671.93},{id:"122",label:"39ב",salary:9284.93},
+      {id:"130",label:"40",salary:8928.37},{id:"131",label:"40א",salary:9541.23},{id:"132",label:"40ב",salary:10154.25},
+      {id:"140",label:"41",salary:9944.49},{id:"141",label:"41א",salary:10557.50},{id:"142",label:"41ב",salary:11170.51},
+      {id:"150",label:"42",salary:11497.14},{id:"151",label:"42א",salary:12110.16},{id:"152",label:"42ב",salary:12723.17},
+      {id:"160",label:"43",salary:13486.39},{id:"161",label:"43א",salary:14099.26},{id:"162",label:"43ב",salary:14712.27},
+      {id:"170",label:"44",salary:15239.61},{id:"171",label:"44א",salary:15932.16},{id:"172",label:"44ב",salary:16624.87},
+    ]},
+
+  "948": { name:"מנהל ומשק - ותיק (948)", shortName:"מנהל ומשק 948", number:"948",
+    color:"from-cyan-600 to-teal-700", btnActive:"bg-gradient-to-br from-cyan-600 to-teal-700", accent:"#0891b2",
+    pensionEmployee:0.07,pensionEmployer:0.135,studyFundEmployee:0.025,studyFundEmployer:0.075,
+    grades:[
+      {id:"100",label:"37",salary:7211.69},{id:"101",label:"37א",salary:7768.71},{id:"102",label:"37ב",salary:8325.75},
+      {id:"110",label:"38",salary:7499.02},{id:"111",label:"38א",salary:8056.05},{id:"112",label:"38ב",salary:8613.07},
+      {id:"120",label:"39",salary:8058.92},{id:"121",label:"39א",salary:8671.93},{id:"122",label:"39ב",salary:9284.93},
+      {id:"130",label:"40",salary:8928.37},{id:"131",label:"40א",salary:9541.23},{id:"132",label:"40ב",salary:10154.25},
+      {id:"140",label:"41",salary:9944.49},{id:"141",label:"41א",salary:10557.50},{id:"142",label:"41ב",salary:11170.51},
+      {id:"150",label:"42",salary:11497.14},{id:"151",label:"42א",salary:12110.16},{id:"152",label:"42ב",salary:12723.17},
+      {id:"160",label:"43",salary:13486.39},{id:"161",label:"43א",salary:14099.26},{id:"162",label:"43ב",salary:14712.27},
+      {id:"170",label:"44",salary:15239.61},{id:"171",label:"44א",salary:15932.16},{id:"172",label:"44ב",salary:16624.87},
+    ]},
+
+  "164": { name:"מומחים - ישן (164)", shortName:"מומחים ישן 164", number:"164",
+    color:"from-fuchsia-600 to-purple-700", btnActive:"bg-gradient-to-br from-fuchsia-600 to-purple-700", accent:"#a21caf",
+    pensionEmployee:0.07,pensionEmployer:0.135,studyFundEmployee:0.025,studyFundEmployer:0.075,
+    grades:[
+      {id:"210",label:"דרגה 1",salary:18410.61},{id:"220",label:"דרגה 2",salary:19883.45},{id:"230",label:"דרגה 3",salary:21356.30},
+      {id:"240",label:"דרגה א",salary:22604.38},{id:"250",label:"דרגה ב",salary:24218.99},{id:"260",label:"דרגה ג",salary:25833.58},
+      {id:"270",label:"דרגה ד",salary:27448.18},{id:"280",label:"דרגה ה",salary:29062.79},{id:"290",label:"דרגה ו",salary:30677.37},
+      {id:"300",label:"דרגה ז",salary:32291.98},
+    ]},
+
+  "555": { name:"מומחים - חדש (555)", shortName:"מומחים חדש 555", number:"555",
+    color:"from-rose-600 to-pink-700", btnActive:"bg-gradient-to-br from-rose-600 to-pink-700", accent:"#e11d48",
+    pensionEmployee:0.07,pensionEmployer:0.135,studyFundEmployee:0.025,studyFundEmployer:0.075,
+    grades:[
+      {id:"130",label:"דרגה 11",salary:9770.75},{id:"140",label:"דרגה 12",salary:10345.50},{id:"150",label:"דרגה 13",salary:10920.25},
+      {id:"160",label:"דרגה 14",salary:11495.00},{id:"170",label:"דרגה 15",salary:12069.74},{id:"180",label:"דרגה 16",salary:12644.50},
+      {id:"190",label:"דרגה 17",salary:13219.25},{id:"200",label:"דרגה 18",salary:13794.00},
+      {id:"205",label:"מנהל משימות",salary:14943.50},
+      {id:"210",label:"דרגה 1",salary:16273.58},{id:"220",label:"דרגה 2",salary:17575.46},{id:"230",label:"דרגה 3",salary:18877.35},
+      {id:"240",label:"דרגה א",salary:19980.55},{id:"250",label:"דרגה ב",salary:21407.74},{id:"260",label:"דרגה ג",salary:22834.92},
+      {id:"270",label:"דרגה ד",salary:24262.11},{id:"280",label:"דרגה ה",salary:25689.29},{id:"290",label:"דרגה ו",salary:27116.47},
+      {id:"300",label:"דרגה ז",salary:28543.65},
+    ]},
+
+  "551": { name:"כלכלנים נבחרים - חדש (551)", shortName:"כלכלנים חדש 551", number:"551",
+    color:"from-blue-600 to-indigo-700", btnActive:"bg-gradient-to-br from-blue-600 to-indigo-700", accent:"#2563eb",
+    pensionEmployee:0.07,pensionEmployer:0.135,studyFundEmployee:0.025,studyFundEmployer:0.075,
+    grades:[
+      {id:"70",label:"36",salary:7230.05},{id:"72",label:"36א",salary:7755.52},{id:"74",label:"36ב",salary:8281.00},
+      {id:"80",label:"37",salary:7808.46},{id:"82",label:"37א",salary:8333.93},{id:"84",label:"37ב",salary:8859.41},
+      {id:"90",label:"38",salary:8736.88},{id:"92",label:"38א",salary:9262.36},{id:"94",label:"38ב",salary:9787.83},
+      {id:"100",label:"39",salary:9523.20},{id:"102",label:"39א",salary:10049.03},{id:"104",label:"39ב",salary:10574.87},
+      {id:"110",label:"40",salary:11121.73},{id:"112",label:"40א",salary:11647.56},{id:"114",label:"40ב",salary:12173.39},
+      {id:"120",label:"41",salary:13003.44},{id:"122",label:"41א",salary:13529.26},{id:"124",label:"41ב",salary:14055.10},
+      {id:"130",label:"42",salary:14412.74},{id:"132",label:"42א",salary:14938.55},{id:"134",label:"42ב",salary:15464.40},
+      {id:"140",label:"43",salary:15975.76},{id:"142",label:"43א",salary:17365.42},{id:"144",label:"43ב",salary:17891.27},
+      {id:"150",label:"44",salary:18052.60},{id:"152",label:"44א",salary:19622.91},{id:"154",label:"44ב",salary:20217.13},
+    ]},
+
+  "564": { name:"לשכות שר ומנכ\"ל - חדש (564)", shortName:"לשכות שר/מנכ\"ל חדש", number:"564",
+    color:"from-yellow-600 to-amber-700", btnActive:"bg-gradient-to-br from-yellow-600 to-amber-700", accent:"#ca8a04",
+    pensionEmployee:0.07,pensionEmployer:0.135,studyFundEmployee:0.025,studyFundEmployer:0.075,
+    grades:[
+      {id:"70",label:"א",salary:6830.68},{id:"72",label:"ב",salary:7051.70},
+      {id:"80",label:"ג",salary:7842.60},{id:"82",label:"ד",salary:8567.68},
+      {id:"90",label:"ה",salary:8548.44},{id:"92",label:"ו",salary:9338.77},
+      {id:"95",label:"ז",salary:9108.49},{id:"96",label:"ח",salary:9501.72},{id:"97",label:"ט",salary:10952.97},
+      {id:"100",label:"י",salary:9974.06},{id:"102",label:"יא",salary:10896.32},{id:"104",label:"יב",salary:11818.57},
+      {id:"110",label:"יג",salary:11024.30},{id:"112",label:"יד",salary:11946.57},{id:"114",label:"טו",salary:12868.82},
+      {id:"120",label:"טז",salary:12252.02},{id:"122",label:"יז",salary:13174.24},{id:"124",label:"יח",salary:14096.50},
+      {id:"130",label:"יט",salary:14024.21},{id:"132",label:"כ",salary:14946.46},{id:"134",label:"כא",salary:15868.72},
+      {id:"140",label:"כב",salary:16407.84},{id:"142",label:"כג",salary:17330.12},{id:"144",label:"כד",salary:18252.36},
+      {id:"146",label:"כה",salary:17393.54},{id:"148",label:"כו",salary:19205.46},{id:"149",label:"כז",salary:20628.10},
+      {id:"250",label:"כח",salary:21860.86},{id:"251",label:"כט",salary:22526.56},
+      {id:"260",label:"ל",salary:23318.27},{id:"265",label:"לא",salary:23655.20},{id:"270",label:"לב",salary:24779.83},
+      {id:"280",label:"לג",salary:25866.14},{id:"290",label:"לד",salary:27015.75},
+      {id:"300",label:"לה",salary:28165.35},{id:"310",label:"לו",salary:29314.96},
+      {id:"145",label:"לז",salary:32000.43},{id:"150",label:"לח",salary:33999.60},
+    ]},
+
+  "568": { name:"סגל בכיר מוביל (568)", shortName:"בכיר מוביל 568", number:"568",
+    color:"from-purple-600 to-violet-700", btnActive:"bg-gradient-to-br from-purple-600 to-violet-700", accent:"#9333ea",
+    pensionEmployee:0.07,pensionEmployer:0.135,studyFundEmployee:0.025,studyFundEmployer:0.075,
+    grades:[
+      {id:"top0",label:"מינויים מיוחדים - 0 שנים",salary:36661.08},{id:"top1",label:"מינויים מיוחדים - 1 שנה",salary:37216.55},{id:"top2",label:"מינויים מיוחדים - 2+ שנים",salary:37772.03},
+      {id:"b1-0",label:"בכיר מוביל ב1 - 0 שנים",salary:33328.25},{id:"b1-1",label:"בכיר מוביל ב1 - 1 שנה",salary:33883.72},
+      {id:"b1-2",label:"בכיר מוביל ב1 - 2 שנים",salary:34439.19},{id:"b1-3",label:"בכיר מוביל ב1 - 3 שנים",salary:34994.67},
+      {id:"b1-4",label:"בכיר מוביל ב1 - 4 שנים",salary:35550.14},{id:"b1-5",label:"בכיר מוביל ב1 - 5 שנים",salary:36105.61},
+      {id:"b1-6",label:"בכיר מוביל ב1 - 6+ שנים",salary:36661.08},
+      {id:"b2-0",label:"בכיר מוביל ב2 - 0 שנים",salary:31106.37},{id:"b2-1",label:"בכיר מוביל ב2 - 1 שנה",salary:31661.84},
+      {id:"b2-2",label:"בכיר מוביל ב2 - 2 שנים",salary:32217.32},{id:"b2-3",label:"בכיר מוביל ב2 - 3 שנים",salary:32772.79},
+      {id:"b2-4",label:"בכיר מוביל ב2 - 4 שנים",salary:33328.25},{id:"b2-5",label:"בכיר מוביל ב2 - 5 שנים",salary:33883.72},
+      {id:"b2-6",label:"בכיר מוביל ב2 - 6+ שנים",salary:34439.19},
+      {id:"b3-0",label:"בכיר מוביל ב3 - 0 שנים",salary:28884.48},{id:"b3-1",label:"בכיר מוביל ב3 - 1 שנה",salary:29439.96},
+      {id:"b3-2",label:"בכיר מוביל ב3 - 2 שנים",salary:29995.43},{id:"b3-3",label:"בכיר מוביל ב3 - 3 שנים",salary:30550.90},
+      {id:"b3-4",label:"בכיר מוביל ב3 - 4 שנים",salary:31106.37},{id:"b3-5",label:"בכיר מוביל ב3 - 5 שנים",salary:31661.84},
+      {id:"b3-6",label:"בכיר מוביל ב3 - 6+ שנים",salary:32217.32},
+    ]},
+
+  "569": { name:"סגל בכיר שאינו מוביל (569)", shortName:"בכיר לא מוביל 569", number:"569",
+    color:"from-slate-600 to-gray-700", btnActive:"bg-gradient-to-br from-slate-600 to-gray-700", accent:"#475569",
+    pensionEmployee:0.07,pensionEmployer:0.135,studyFundEmployee:0.025,studyFundEmployer:0.075,
+    grades:[
+      {id:"g1-0",label:"בכיר ג1 - 0 שנים",salary:28884.48},{id:"g1-1",label:"בכיר ג1 - 1 שנה",salary:29439.96},
+      {id:"g1-2",label:"בכיר ג1 - 2 שנים",salary:29995.43},{id:"g1-3",label:"בכיר ג1 - 3 שנים",salary:30550.90},
+      {id:"g1-4",label:"בכיר ג1 - 4 שנים",salary:31106.37},{id:"g1-5",label:"בכיר ג1 - 5 שנים",salary:31661.84},
+      {id:"g1-6",label:"בכיר ג1 - 6+ שנים",salary:32217.32},
+      {id:"g2-0",label:"בכיר ג2 - 0 שנים",salary:24440.73},{id:"g2-1",label:"בכיר ג2 - 1 שנה",salary:24996.20},
+      {id:"g2-2",label:"בכיר ג2 - 2 שנים",salary:25551.67},{id:"g2-3",label:"בכיר ג2 - 3 שנים",salary:26107.13},
+      {id:"g2-4",label:"בכיר ג2 - 4 שנים",salary:26662.61},{id:"g2-5",label:"בכיר ג2 - 5 שנים",salary:27218.08},
+      {id:"g2-6",label:"בכיר ג2 - 6 שנים",salary:27773.55},{id:"g2-7",label:"בכיר ג2 - 7 שנים",salary:28329.02},
+      {id:"g2-8",label:"בכיר ג2 - 8+ שנים",salary:28884.48},
+    ]},
+
+  "557": { name:"בכירים ותיקים - צמודי יוקר (557)", shortName:"בכירים ותיקים 557", number:"557",
+    color:"from-gray-700 to-zinc-800", btnActive:"bg-gradient-to-br from-gray-700 to-zinc-800", accent:"#374151",
+    pensionEmployee:0.07,pensionEmployer:0.135,studyFundEmployee:0.025,studyFundEmployer:0.075,
+    grades:[
+      {id:"340",label:"רמה 340",salary:32000.44},{id:"350",label:"רמה 350",salary:33998.81},
+      {id:"360",label:"רמה 360",salary:35999.39},{id:"370",label:"רמה 370",salary:40601.38},
+      {id:"450",label:"רמה 450 (מנהל מינהל האדמה)",salary:46981.55},
+    ]},
+
+  "864": { name:"בכירים בלשכות שר ומנכ\"ל (864)", shortName:"בכירים לשכות 864", number:"864",
+    color:"from-stone-600 to-neutral-700", btnActive:"bg-gradient-to-br from-stone-600 to-neutral-700", accent:"#57534e",
+    pensionEmployee:0.07,pensionEmployer:0.135,studyFundEmployee:0.025,studyFundEmployer:0.075,
+    grades:[
+      {id:"145",label:"דרגה 7",salary:32000.43},{id:"150",label:"דרגה 8",salary:33999.60},
+    ]},
+
+  "287": { name:"צוערים - ישן (287)", shortName:"צוערים ישן 287", number:"287",
+    color:"from-orange-600 to-amber-600", btnActive:"bg-gradient-to-br from-orange-600 to-amber-600", accent:"#ea580c",
+    pensionEmployee:0.07,pensionEmployer:0.135,studyFundEmployee:0.025,studyFundEmployer:0.075,
+    grades:[
+      {id:"409",label:"צוער",salary:6906.44},{id:"410",label:"צוער ותיק",salary:7555.71},{id:"411",label:"צוע.א1",salary:7374.62},
+      {id:"412",label:"צוע.א2",salary:7842.79},{id:"413",label:"צוע.ב1 ותיק",salary:8023.88},{id:"414",label:"צוע.ב2 ותיק",salary:8492.05},
+    ]},
+
+  "554": { name:"צוערים - חדש (554)", shortName:"צוערים חדש 554", number:"554",
+    color:"from-amber-600 to-orange-700", btnActive:"bg-gradient-to-br from-amber-600 to-orange-700", accent:"#d97706",
+    pensionEmployee:0.07,pensionEmployer:0.135,studyFundEmployee:0.025,studyFundEmployer:0.075,
+    grades:[
+      {id:"409",label:"צוער",salary:6104.78},{id:"410",label:"צוער ותיק",salary:6678.68},{id:"411",label:"צוע.א1",salary:6518.60},
+      {id:"412",label:"צוע.א2",salary:6932.43},{id:"413",label:"צוע.ב1 ותיק",salary:7092.49},{id:"414",label:"צוע.ב2 ותיק",salary:7506.33},
+    ]},
+
+  "167": { name:"יחידת היעדים (167)", shortName:"יחידת היעדים", number:"167",
+    color:"from-indigo-700 to-blue-800", btnActive:"bg-gradient-to-br from-indigo-700 to-blue-800", accent:"#3730a3",
+    pensionEmployee:0.07,pensionEmployer:0.135,studyFundEmployee:0.025,studyFundEmployer:0.075,
+    grades:[
+      {id:"101",label:"ראש ענף 1",salary:11053.84},{id:"102",label:"ראש ענף 2",salary:11704.07},{id:"103",label:"ראש ענף 3",salary:12354.28},
+      {id:"111",label:"מרכז בכיר 1",salary:12354.28},{id:"112",label:"מרכז בכיר 2",salary:13654.74},{id:"113",label:"מרכז בכיר 3",salary:14955.19},
+      {id:"121",label:"מנהל תחום תיאום 1",salary:13654.74},{id:"122",label:"מנהל תחום תיאום 2",salary:14955.19},{id:"123",label:"מנהל תחום תיאום 3",salary:16905.87},
+      {id:"131",label:"מנהל תחום מעקב 1",salary:13654.74},{id:"132",label:"מנהל תחום מעקב 2",salary:14955.19},{id:"133",label:"מנהל תחום מעקב 3",salary:16905.87},
+      {id:"134",label:"מנהל תחום מעקב 4",salary:20156.99},
+    ]},
+
+  "168": { name:"חוקרי חקירות שוטרים (168)", shortName:"חוקרי שוטרים 168", number:"168",
+    color:"from-blue-800 to-indigo-900", btnActive:"bg-gradient-to-br from-blue-800 to-indigo-900", accent:"#1e3a8a",
+    pensionEmployee:0.07,pensionEmployer:0.135,studyFundEmployee:0.025,studyFundEmployer:0.075,
+    grades:[
+      {id:"10",label:"צוער",salary:7019.26},{id:"20",label:"חוקר א'",salary:7657.37},{id:"21",label:"חוקר א' + גמול א'",salary:8153.19},{id:"22",label:"חוקר א' + א'+ב'",salary:8649.00},
+      {id:"30",label:"חוקר ב'",salary:8550.74},{id:"31",label:"חוקר ב' + גמול א'",salary:9046.56},{id:"32",label:"חוקר ב' + א'+ב'",salary:9542.36},
+      {id:"40",label:"חוקר ג'",salary:9316.46},{id:"41",label:"חוקר ג' + גמול א'",salary:9812.28},{id:"42",label:"חוקר ג' + א'+ב'",salary:10308.10},
+      {id:"50",label:"חוקר בכיר א'",salary:10209.82},{id:"51",label:"חוקר בכיר א' + א'",salary:10705.64},{id:"52",label:"חוקר בכיר א' + א'+ב'",salary:11201.46},
+      {id:"60",label:"חוקר בכיר ב'",salary:11103.19},{id:"61",label:"חוקר בכיר ב' + א'",salary:11599.01},{id:"62",label:"חוקר בכיר ב' + א'+ב'",salary:12094.83},
+      {id:"70",label:"חוקר בכיר ג'",salary:11996.55},{id:"71",label:"חוקר בכיר ג' + א'",salary:12492.37},{id:"72",label:"חוקר בכיר ג' + א'+ב'",salary:12988.17},
+      {id:"75",label:"ראש שלוחה",salary:12774.21},{id:"76",label:"ראש שלוחה + א'",salary:13270.03},{id:"77",label:"ראש שלוחה + א'+ב'",salary:13765.84},
+      {id:"80",label:"סגן ראש צוות",salary:12889.90},{id:"81",label:"סגן ראש צוות + א'",salary:13447.69},{id:"82",label:"סגן ראש צוות + א'+ב'",salary:14005.49},
+      {id:"90",label:"ראש צוות",salary:14166.14},{id:"91",label:"ראש צוות + א'",salary:14723.94},{id:"92",label:"ראש צוות + א'+ב'",salary:15281.72},
+    ]},
+
+  "109": { name:"עובדי אית\"ן ואית\"ן אבטחה (109)", shortName:"עובדי אית\"ן", number:"109",
+    color:"from-emerald-700 to-green-800", btnActive:"bg-gradient-to-br from-emerald-700 to-green-800", accent:"#047857",
+    pensionEmployee:0.07,pensionEmployer:0.135,studyFundEmployee:0.025,studyFundEmployer:0.075,
+    grades:[
+      {id:"10",label:"דרגה 1",salary:5932.01},{id:"20",label:"דרגה 2",salary:6073.88},{id:"30",label:"דרגה 3",salary:6217.94},
+      {id:"40",label:"דרגה 4",salary:6361.65},{id:"50",label:"דרגה 5",salary:6793.29},{id:"60",label:"דרגה 6",salary:7507.62},
+      {id:"100",label:"דרגה 10",salary:6425.92},{id:"110",label:"דרגה 11",salary:6861.90},{id:"120",label:"דרגה 12",salary:7583.46},
+    ]},
+
+  "384": { name:"מאבטחי מתקן (384)", shortName:"מאבטחי מתקן", number:"384",
+    color:"from-zinc-600 to-stone-700", btnActive:"bg-gradient-to-br from-zinc-600 to-stone-700", accent:"#52525b",
+    pensionEmployee:0.07,pensionEmployer:0.135,studyFundEmployee:0.025,studyFundEmployer:0.075,
+    grades:[
+      {id:"10",label:"מאבטח מתקן",salary:6540.10},{id:"20",label:"קורס אחיד",salary:7071.22},{id:"30",label:"קב\"ט",salary:8622.05},
+    ]},
+
+  "387": { name:"מאבטחים (387)", shortName:"מאבטחים", number:"387",
+    color:"from-slate-700 to-gray-800", btnActive:"bg-gradient-to-br from-slate-700 to-gray-800", accent:"#334155",
+    pensionEmployee:0.07,pensionEmployer:0.135,studyFundEmployee:0.025,studyFundEmployer:0.075,
+    grades:[
+      {id:"810",label:"מאבטח 1",salary:5887.99},{id:"820",label:"מאבטח 2",salary:5999.39},{id:"830",label:"מאבטח 3",salary:6430.84},
+      {id:"840",label:"מדריך ירי/קמ\"ג 1",salary:6909.13},{id:"850",label:"מדריך ירי/קמ\"ג 2",salary:7345.99},
+      {id:"815",label:"מאבטח 1 ב.מ.",salary:6137.95},{id:"825",label:"מאבטח 2 ב.מ.",salary:6253.26},{id:"835",label:"מאבטח 3 ב.מ.",salary:6703.43},
+      {id:"860",label:"חמוש 1",salary:7100.78},{id:"870",label:"חמוש 2",salary:7219.12},{id:"880",label:"חמוש 3",salary:7751.68},
+      {id:"890",label:"לא חמוש 1",salary:6607.66},{id:"900",label:"לא חמוש 2",salary:6745.73},{id:"910",label:"לא חמוש 3",salary:7219.12},
+      {id:"920",label:"מדריך ירי 1",salary:8284.23},{id:"930",label:"מדריך ירי 2",salary:9465.53},
+    ]},
+
+  "522": { name:"עובדי המטה לביטחון לאומי (522)", shortName:"מטה ביטחון לאומי", number:"522",
+    color:"from-red-800 to-red-900", btnActive:"bg-gradient-to-br from-red-800 to-red-900", accent:"#991b1b",
+    pensionEmployee:0.07,pensionEmployer:0.135,studyFundEmployee:0.025,studyFundEmployer:0.075,
+    grades:[
+      {id:"130",label:"עוזר ראש מדור 1",salary:9787.03},{id:"140",label:"עוזר ראש מדור 2",salary:11010.41},
+      {id:"150",label:"עוזר ראש מדור 3",salary:12233.79},{id:"160",label:"עוזר ראש מדור 4",salary:13457.16},
+      {id:"170",label:"ראש מדור 1",salary:14680.54},{id:"180",label:"ראש מדור 2",salary:15903.91},{id:"190",label:"ראש מדור 3",salary:17127.29},
+      {id:"200",label:"ראש ענף 1",salary:18350.67},{id:"210",label:"ראש ענף 2",salary:19574.06},{id:"220",label:"ראש ענף 3",salary:20797.44},
+      {id:"230",label:"ראש מחלקה 1",salary:22020.82},{id:"240",label:"ראש מחלקה 2",salary:23244.19},{id:"250",label:"ראש מחלקה 3",salary:24467.57},
+      {id:"260",label:"ראש חטיבה 1",salary:28137.70},{id:"270",label:"ראש חטיבה 2",salary:29361.08},{id:"280",label:"ראש חטיבה 3",salary:30920.89},
+      {id:"290",label:"ראש אגף",salary:32740.04},{id:"300",label:"סגן ראש המל\"ל",salary:39638.68},
+      {id:"310",label:"סגן ראש המל\"ל (חדש)",salary:40597.00},{id:"320",label:"משנה לראש המל\"ל",salary:41677.00},
+    ]},
+
+  "965": { name:"מומחים בשירותי הביטחון (965)", shortName:"מומחים ביטחון 965", number:"965",
+    color:"from-red-700 to-rose-800", btnActive:"bg-gradient-to-br from-red-700 to-rose-800", accent:"#b91c1c",
+    pensionEmployee:0.07,pensionEmployer:0.135,studyFundEmployee:0.025,studyFundEmployer:0.075,
+    grades:[
+      {id:"80",label:"18",salary:7445.09},{id:"95",label:"38",salary:8934.11},{id:"100",label:"39",salary:10423.12},
+      {id:"110",label:"40",salary:11912.13},{id:"120",label:"41",salary:13401.15},{id:"130",label:"42",salary:14890.16},{id:"140",label:"43",salary:16379.18},
+      {id:"210",label:"דרגה 1",salary:17782.84},{id:"220",label:"דרגה 2",salary:19205.46},{id:"230",label:"דרגה 3",salary:20628.10},
+      {id:"240",label:"דרגה א",salary:21833.62},{id:"250",label:"דרגה ב",salary:23393.17},{id:"260",label:"דרגה ג",salary:24952.70},
+      {id:"270",label:"דרגה ד",salary:26512.25},{id:"280",label:"דרגה ה",salary:28071.80},{id:"290",label:"דרגה ו",salary:29631.34},
+      {id:"300",label:"דרגה ז",salary:31190.89},{id:"310",label:"דרגה ח",salary:32298.25},{id:"320",label:"דרגה ט",salary:33836.28},
+      {id:"330",label:"דרגה י",salary:35374.28},{id:"340",label:"דרגה יא",salary:37547.72},{id:"350",label:"דרגה יב",salary:38991.85},
+      {id:"360",label:"דרגה יג",salary:39988.31},{id:"370",label:"דרגה יד",salary:41526.31},{id:"380",label:"דרגה טו",salary:43064.34},
+    ]},
+
+  "122": { name:"מינהל תעופה אזרחי (122)", shortName:"תעופה אזרחי 122", number:"122",
+    color:"from-sky-500 to-cyan-600", btnActive:"bg-gradient-to-br from-sky-500 to-cyan-600", accent:"#0ea5e9",
+    pensionEmployee:0.07,pensionEmployer:0.135,studyFundEmployee:0.025,studyFundEmployer:0.075,
+    grades:[
+      {id:"10",label:"טייסים 1",salary:22275.27},{id:"11",label:"טייסים 1א",salary:22891.74},{id:"12",label:"טייסים 1ב",salary:23509.51},
+      {id:"20",label:"טייסים 2",salary:19613.20},{id:"21",label:"טייסים 2א",salary:20230.03},{id:"22",label:"טייסים 2ב",salary:20847.82},
+      {id:"30",label:"טייסים 3",salary:17512.66},{id:"31",label:"טייסים 3א",salary:18128.75},{id:"32",label:"טייסים 3ב",salary:18746.52},
+      {id:"40",label:"טייסים 4",salary:16110.68},{id:"41",label:"טייסים 4א",salary:16727.86},{id:"42",label:"טייסים 4ב",salary:17345.64},
+      {id:"50",label:"טייסים 5",salary:14709.90},{id:"51",label:"טייסים 5א",salary:15326.98},{id:"52",label:"טייסים 5ב",salary:15944.75},
+      {id:"60",label:"טייסים 6",salary:13309.13},{id:"61",label:"טייסים 6א",salary:13926.10},{id:"62",label:"טייסים 6ב",salary:14543.89},
+      {id:"70",label:"טייסים 7",salary:12608.13},{id:"71",label:"טייסים 7א",salary:13225.66},{id:"72",label:"טייסים 7ב",salary:13843.46},
+      {id:"80",label:"מהנדסים 8",salary:14462.78},{id:"81",label:"מהנדסים 8א",salary:15171.17},{id:"82",label:"מהנדסים 8ב",salary:15879.82},
+      {id:"90",label:"מהנדסים 9",salary:13257.75},{id:"91",label:"מהנדסים 9א",salary:13965.96},{id:"92",label:"מהנדסים 9ב",salary:14674.63},
+      {id:"100",label:"מהנדסים 10",salary:12052.72},{id:"101",label:"מהנדסים 10א",salary:12760.76},{id:"102",label:"מהנדסים 10ב",salary:13469.40},
+      {id:"110",label:"מהנדסים 11",salary:10847.69},{id:"111",label:"מהנדסים 11א",salary:11555.56},{id:"112",label:"מהנדסים 11ב",salary:12264.22},
+      {id:"120",label:"מהנדסים 12",salary:9642.68},{id:"121",label:"מהנדסים 12א",salary:10350.35},{id:"122",label:"מהנדסים 12ב",salary:11059.02},
+      {id:"130",label:"מהנדסים 13",salary:8838.91},{id:"131",label:"מהנדסים 13א",salary:9546.86},{id:"132",label:"מהנדסים 13ב",salary:10255.53},
+      {id:"140",label:"מהנדסים 14",salary:8035.14},{id:"141",label:"מהנדסים 14א",salary:8743.39},{id:"142",label:"מהנדסים 14ב",salary:9452.05},
+      {id:"150",label:"מהנדסים 15",salary:7231.39},{id:"151",label:"מהנדסים 15א",salary:7939.92},{id:"152",label:"מהנדסים 15ב",salary:8648.57},
+      {id:"160",label:"הנדסאים 16",salary:8908.64},{id:"161",label:"הנדסאים 16א",salary:9694.06},{id:"162",label:"הנדסאים 16ב",salary:10479.76},
+      {id:"170",label:"הנדסאים 17",salary:8018.02},{id:"171",label:"הנדסאים 17א",salary:8803.22},{id:"172",label:"הנדסאים 17ב",salary:9588.95},
+      {id:"180",label:"הנדסאים 18",salary:7127.41},{id:"181",label:"הנדסאים 18א",salary:7912.41},{id:"182",label:"הנדסאים 18ב",salary:8698.11},
+      {id:"190",label:"הנדסאים 19",salary:6235.56},{id:"191",label:"הנדסאים 19א",salary:7021.53},{id:"192",label:"הנדסאים 19ב",salary:7807.24},
+      {id:"210",label:"מפקח מובילים א",salary:28137.70},{id:"220",label:"מפקח מובילים ב",salary:29361.08},{id:"230",label:"מפקח מובילים ג",salary:30584.45},
+      {id:"240",label:"מפקח מובילים ד",salary:31807.84},{id:"250",label:"מפקח מובילים ה",salary:33031.23},
+      {id:"260",label:"מפקח ראשי ו",salary:34254.60},{id:"270",label:"מפקח ראשי ז",salary:35477.98},
+      {id:"280",label:"מפקח ראשי ח",salary:36701.36},{id:"290",label:"מפקח ראשי ט",salary:37924.73},{id:"300",label:"מפקח ראשי י",salary:39148.11},
+      {id:"a1",label:"מנהל אגף בכיר - תפעול אוויריים",salary:48935.14},
+      {id:"a2",label:"מנהל תחום בכיר - ייריווא",salary:46488.39},
+      {id:"a3",label:"מנהל תחום בכיר - רישוי טייסי עובדים",salary:36701.36},
+    ]},
+
+  "88": { name:"בוחני רישוי נהיגה (88 - שעתי)", shortName:"בוחני נהיגה 88", number:"88",
+    color:"from-violet-500 to-indigo-600", btnActive:"bg-gradient-to-br from-violet-500 to-indigo-600", accent:"#6d28d9",
+    pensionEmployee:0.07,pensionEmployer:0.135,studyFundEmployee:0.025,studyFundEmployer:0.075,
+    grades:[
+      {id:"1",label:"רמה 1 (שעתי)",salary:53.63*182},{id:"2",label:"רמה 2 (שעתי)",salary:55.03*182},
+      {id:"3",label:"רמה 3 (שעתי)",salary:56.38*182},{id:"4",label:"רמה 4 (שעתי)",salary:57.72*182},
+    ]},
+
+  "589": { name:"עובדי חדר מצב קיברנטי (589)", shortName:"חדר מצב קיברנטי", number:"589",
+    color:"from-violet-700 to-purple-800", btnActive:"bg-gradient-to-br from-violet-700 to-purple-800", accent:"#6d28d9",
+    pensionEmployee:0.07,pensionEmployer:0.135,studyFundEmployee:0.025,studyFundEmployer:0.075,
+    grades:[{id:"100",label:"עובד חדר מצב קיברנטי (שעתי)",salary:56.55*182}]},
+
+  "590": { name:"קשרים - משרד ראש הממשלה (590)", shortName:"קשרים מרה\"מ", number:"590",
+    color:"from-cyan-700 to-teal-800", btnActive:"bg-gradient-to-br from-cyan-700 to-teal-800", accent:"#0e7490",
+    pensionEmployee:0.07,pensionEmployer:0.135,studyFundEmployee:0.025,studyFundEmployer:0.075,
+    grades:[
+      {id:"100",label:"קשר האזנה 1 (שעתי)",salary:33.60*182},{id:"110",label:"קשר האזנה 2 (שעתי)",salary:34.68*182},
+      {id:"120",label:"קשר האזנה 3 (שעתי)",salary:36.30*182},{id:"130",label:"קשר האזנה חמ\"א (שעתי)",salary:38.26*182},
+      {id:"200",label:"קשר תקשורת זרה 1 (שעתי)",salary:35.22*182},{id:"210",label:"קשר תקשורת זרה 2 (שעתי)",salary:35.98*182},
+      {id:"220",label:"קשר תקשורת זרה 3 (שעתי)",salary:37.17*182},{id:"230",label:"קשר תקשורת זרה חמ\"א (שעתי)",salary:39.34*182},
+    ]},
+
+  "487": { name:"סוקרים - ישן (487)", shortName:"סוקרים 487", number:"487",
+    color:"from-rose-500 to-red-600", btnActive:"bg-gradient-to-br from-rose-500 to-red-600", accent:"#f43f5e",
+    pensionEmployee:0.07,pensionEmployer:0.135,studyFundEmployee:0.025,studyFundEmployer:0.075,
+    grades:[
+      {id:"80",label:"סוקרי טלפון (שעתי)",salary:31.72*182},{id:"90",label:"סוקרי עסקים (שעתי)",salary:32.46*182},
+      {id:"95",label:"סוקרי משפחות (שעתי)",salary:33.23*182},
+    ]},
+
+  "584": { name:"סוקרים - חדש (584)", shortName:"סוקרים חדש 584", number:"584",
+    color:"from-pink-500 to-rose-600", btnActive:"bg-gradient-to-br from-pink-500 to-rose-600", accent:"#ec4899",
+    pensionEmployee:0.07,pensionEmployer:0.135,studyFundEmployee:0.025,studyFundEmployer:0.075,
+    grades:[
+      {id:"170",label:"סוקרי טלפון (שעתי)",salary:38.27*182},{id:"175",label:"סוקרי טלפון א (שעתי)",salary:39.79*182},{id:"176",label:"סוקרי טלפון ב (שעתי)",salary:41.78*182},
+      {id:"180",label:"סוקרי עסקים שטח (שעתי)",salary:39.17*182},{id:"185",label:"סוקרי עסקים שטח א (שעתי)",salary:40.73*182},{id:"186",label:"סוקרי עסקים שטח ב (שעתי)",salary:41.54*182},
+      {id:"190",label:"סוקרי משפחות (שעתי)",salary:39.54*182},{id:"195",label:"סוקרי משפחות א (שעתי)",salary:41.90*182},{id:"196",label:"סוקרי משפחות ב (שעתי)",salary:43.99*182},
+    ]},
+
+  "585": { name:"סוקרים (585)", shortName:"סוקרים 585", number:"585",
+    color:"from-red-500 to-pink-600", btnActive:"bg-gradient-to-br from-red-500 to-pink-600", accent:"#ef4444",
+    pensionEmployee:0.07,pensionEmployer:0.135,studyFundEmployee:0.025,studyFundEmployer:0.075,
+    grades:[
+      {id:"13",label:"סוקרי טלפון (שעתי)",salary:32.19*182},{id:"14",label:"סוקרי עסקים ושטח (שעתי)",salary:32.94*182},
+      {id:"15",label:"סוקרי משפחות (שעתי)",salary:33.72*182},
+    ]},
+
+  "586": { name:"פיקוח אלקטרוני - משרד הפנים (586)", shortName:"פיקוח אלקטרוני 586", number:"586",
+    color:"from-violet-600 to-indigo-700", btnActive:"bg-gradient-to-br from-violet-600 to-indigo-700", accent:"#7c3aed",
+    pensionEmployee:0.07,pensionEmployer:0.135,studyFundEmployee:0.025,studyFundEmployer:0.075,
+    grades:[
+      {id:"70",label:"רמה 1 (שעתי)",salary:37.71*182},{id:"80",label:"רמה 2 (שעתי)",salary:39.67*182},{id:"90",label:"רמה 3 (שעתי)",salary:41.62*182},
+    ]},
+
+  "381": { name:"מנהלי חטיבות ביחידת תקשורת - אוצר (381)", shortName:"מנהלי חטיבות תקשורת", number:"381",
+    color:"from-stone-600 to-zinc-700", btnActive:"bg-gradient-to-br from-stone-600 to-zinc-700", accent:"#78716c",
+    pensionEmployee:0.07,pensionEmployer:0.135,studyFundEmployee:0.025,studyFundEmployer:0.075,
+    grades:[{id:"1",label:"מנהל חטיבה",salary:28277.91}]},
+
+  "509": { name:"מרגתמי ביטחון - משרד החוץ (509)", shortName:"מרגתמי ביטחון חוץ", number:"509",
+    color:"from-zinc-600 to-slate-700", btnActive:"bg-gradient-to-br from-zinc-600 to-slate-700", accent:"#71717a",
+    pensionEmployee:0.07,pensionEmployer:0.135,studyFundEmployee:0.025,studyFundEmployer:0.075,
+    grades:[{id:"100",label:"מאבטח (שעתי)",salary:35.48*182}]},
+
+  "764": { name:"נהג שר ומנכ\"ל (764)", shortName:"נהג שר 764", number:"764",
+    color:"from-neutral-600 to-stone-700", btnActive:"bg-gradient-to-br from-neutral-600 to-stone-700", accent:"#737373",
+    pensionEmployee:0.07,pensionEmployer:0.135,studyFundEmployee:0.025,studyFundEmployer:0.075,
+    grades:[
+      {id:"500",label:"נ.שר א",salary:13854.66},{id:"502",label:"נ.שר ב",salary:14408.61},{id:"506",label:"נ.שר ג",salary:14984.38},
+      {id:"520",label:"נ.סגן.שר א",salary:12752.56},{id:"522",label:"נ.סגן.שר ב",salary:13262.91},{id:"526",label:"נ.סגן.שר ג",salary:13793.59},
+      {id:"540",label:"נ.מ.נ.מ א",salary:11650.47},{id:"542",label:"נ.מ.נ.מ ב",salary:12117.20},{id:"546",label:"נ.מ.נ.מ ג",salary:12601.37},
+      {id:"508",label:"נ.רה\"מ ג'",salary:16061.46},
+    ]},
+
+};
+
+// Car packages
+const CAR_PACKAGES = {
+  "none":    { label: "ללא רכב", value: 0, isCar: false },
+  "level2":  { label: "רכב שירות - רמה ב'", value: 1022, isCar: true, insurance: 444 },
+  "level3":  { label: "רכב שירות - רמה ג'", value: 1228, isCar: true, insurance: 570 },
+  "level4":  { label: "רכב שירות - רמה ד'", value: 1403, isCar: true, insurance: 676 },
+};
+
+// מחשב נקודות זיכוי למילואים
+function calcMiluimPoints(days) {
+  if (days < 30) return 0;
+  if (days < 40) return 0.5;
+  if (days < 50) return 0.75;
+  const addPts = Math.floor((days - 50) / 5) * 0.25;
+  return Math.min(1.0 + addPts, 4.0);
+}
+
+// מחשב מס הכנסה חודשי לפי מדרגות 2024
+function calcIncomeTax(monthly) {
+  const brackets = [
+    {up: 7010,  rate: 0.10},
+    {up: 10060, rate: 0.14},
+    {up: 16150, rate: 0.20},
+    {up: 22440, rate: 0.31},
+    {up: 46690, rate: 0.35},
+    {up: 60130, rate: 0.47},
+    {up: Infinity, rate: 0.50},
+  ];
+  let tax = 0, prev = 0;
+  for (const b of brackets) {
+    if (monthly <= prev) break;
+    tax += (Math.min(monthly, b.up) - prev) * b.rate;
+    prev = b.up;
+  }
+  return tax;
+}
+
+// ביטוח לאומי + בריאות (משולב כמו במקור)
+function calcSocialSecurity(gross) {
+  if (gross <= 7522) return gross * 0.0395;
+  return (7522 * 0.0395) + ((gross - 7522) * 0.12);
+}
+
+function calcAll(baseSalary, contract, params) {
+  const {
+    overtimeHours, carType, childrenUnder5, children6to18,
+    gender, hasDegree, partnerWorks, miluimDays, insuranceCost,
+    vehicleRegFee, travelAllowance,
+    companyCar, companyCarGroup,
+    includeInsuranceRefund, includeStudyFund, includePension,
+    includeRecovery, includeClothing, includeGifts,
+  } = params;
+
+  const cp = CAR_PACKAGES[carType];
+  const hourlyRate = baseSalary / 182;
+  const ot125h = overtimeHours * (2/3);
+  const ot150h = overtimeHours * (1/3);
+  const overtimePay = (hourlyRate * 1.25 * ot125h) + (hourlyRate * 1.50 * ot150h);
+  const travelPay = travelAllowance || 323;
+  // זקיפת הטבה לרכב צמוד (נוסף לברוטו למס)
+  const COMPANY_CAR_IMPUTATION = { 3: 4390, 4: 5260, 5: 7280 };
+  const companyCarImputation = companyCar ? (COMPANY_CAR_IMPUTATION[companyCarGroup] || 0) : 0;
+  const carGross = cp.value + travelPay; // חבילת רכב שירות + קצובת נסיעה
+  const maonotPay = (partnerWorks && childrenUnder5 > 0) ? (Math.min(childrenUnder5, 2) * 330) : 0;
+  const totalGross = baseSalary + overtimePay + carGross + maonotPay + companyCarImputation;
+
+  // נקודות זיכוי
+  let points = gender === "female" ? 2.75 : 2.25;
+  if (hasDegree) points += 1;
+  points += childrenUnder5 * 2.5;
+  points += children6to18 * 1;
+  const miluimPoints = calcMiluimPoints(miluimDays);
+  points += miluimPoints;
+  const taxCreditValue = points * 242;
+
+  // מס הכנסה
+  let incomeTax = Math.max(0, calcIncomeTax(totalGross) - taxCreditValue);
+
+  // ביטוח לאומי + בריאות
+  const socialSecurity = calcSocialSecurity(totalGross);
+
+  // ניכויי עובד
+  const pensionDed = baseSalary * contract.pensionEmployee;
+  const studyFundDed = baseSalary * contract.studyFundEmployee;
+  const unionDues = 50;
+  const totalDeductions = incomeTax + socialSecurity + pensionDed + studyFundDed + unionDues;
+  const netSalary = totalGross - totalDeductions;
+
+  // הפרשות מעסיק
+  const studyFundEmployer = baseSalary * contract.studyFundEmployer;
+  const pensionEmployer = baseSalary * contract.pensionEmployer;
+
+  // הטבות נוספות
+  const recoveryPay = 350;
+  const clothing = 125;
+  const gifts = 100;
+  const insuranceRefundMonthly = cp.isCar ? Math.min(insuranceCost, 7000) / 12 : 0;
+  const regFeeRefundMonthly = cp.isCar ? Math.min(vehicleRegFee || 0, 2326) / 12 : 0;
+
+  let totalEconomicValue = netSalary;
+  if (includeInsuranceRefund) totalEconomicValue += insuranceRefundMonthly + regFeeRefundMonthly;
+  if (includeStudyFund) totalEconomicValue += studyFundEmployer;
+  if (includePension) totalEconomicValue += pensionEmployer;
+  if (includeRecovery) totalEconomicValue += recoveryPay;
+  if (includeClothing) totalEconomicValue += clothing;
+  if (includeGifts) totalEconomicValue += gifts;
+
+  return {
+    baseSalary, overtimePay, ot125h, ot150h, carGross, maonotPay,
+    totalGross, points, miluimPoints, taxCreditValue,
+    incomeTax, socialSecurity, pensionDed, studyFundDed, unionDues,
+    totalDeductions, netSalary, insuranceRefundMonthly, regFeeRefundMonthly,
+    studyFundEmployer, pensionEmployer, totalEconomicValue,
+    hourlyRate, recoveryPay, clothing, gifts, travelAllowance,
+    companyCarImputation,
+  };
+}
+
+// ============================================================
+// SVG ICONS
+// ============================================================
+const Ico = {
+  Calc:    ({c}) => <svg className={c} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path sLCap="round" sLJoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>,
+  Brief:   ({c}) => <svg className={c} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>,
+  Trend:   ({c}) => <svg className={c} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>,
+  Card:    ({c}) => <svg className={c} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>,
+  Cal:     ({c}) => <svg className={c} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>,
+  Chevron: ({c}) => <svg className={c} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>,
+  Car:     ({c}) => <svg className={c} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z"/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10l1 1h1m8-1h1l1-1v-2.586a1 1 0 00-.293-.707l-3.414-3.414A1 1 0 0010 7H9M17 16h1l1-1V9" /></svg>,
+  Baby:    ({c}) => <svg className={c} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>,
+  Coin:    ({c}) => <svg className={c} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" /></svg>,
+  Pig:     ({c}) => <svg className={c} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" /></svg>,
+  File:    ({c}) => <svg className={c} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>,
+  Zap:     ({c}) => <svg className={c} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>,
+  Check:   ({c}) => <svg className={c} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
+  Info:    ({c}) => <svg className={c} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
+  Shield:  ({c}) => <svg className={c} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>,
+};
+
+const lc = "round";
+// Fix the Calc icon inline
+const CalcIcon = ({c}) => <svg className={c} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>;
+
+// ============================================================
+// UI COMPONENTS
+// ============================================================
+const Card = ({children, className=""}) => (
+  <div className={`bg-white rounded-2xl shadow-lg border border-slate-200 ${className}`}>{children}</div>
+);
+
+const SectionTitle = ({icon: Icon, title, subtitle}) => (
+  <div className="mb-5">
+    <div className="flex items-center gap-3 mb-1">
+      <div className="p-2 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg">
+        <Icon c="w-5 h-5 text-white" />
+      </div>
+      <span className="text-lg font-bold text-slate-800">{title}</span>
+    </div>
+    {subtitle && <p className="text-sm text-slate-500 mr-11">{subtitle}</p>}
+  </div>
+);
+
+const ResultRow = ({label, value, isNeg=false, highlight=false, subValue=null, icon: Icon=null}) => (
+  <div className={`flex justify-between items-center py-2.5 px-3 rounded-lg transition-all ${
+    highlight ? 'bg-gradient-to-l from-blue-50 to-transparent border-r-4 border-blue-500 font-semibold' : 'hover:bg-slate-50'
+  }`}>
+    <div className="flex items-center gap-2">
+      {Icon && <Icon c="w-4 h-4 text-slate-400" />}
+      <div>
+        <span className={`${highlight ? 'font-bold text-slate-800' : 'text-slate-600'} text-sm`}>{label}</span>
+        {subValue && <div className="text-xs text-slate-400 mt-0.5">{subValue}</div>}
+      </div>
+    </div>
+    <span className={`font-bold font-mono text-base ${isNeg ? 'text-red-600' : highlight ? 'text-blue-700' : 'text-slate-800'}`}>
+      {isNeg ? '−' : ''}{Math.round(Math.abs(value)).toLocaleString('he-IL')} ₪
+    </span>
+  </div>
+);
+
+const BenefitToggle = ({label, sub, value, checked, onChange, icon: Icon=null}) => (
+  <label className={`flex items-center justify-between p-3 bg-white rounded-lg border-2 transition-all cursor-pointer ${
+    checked ? 'border-amber-400 bg-amber-50' : 'border-slate-200 hover:border-amber-300'
+  }`}>
+    <div className="flex items-center gap-3 flex-1">
+      <input type="checkbox" checked={checked} onChange={e => onChange(e.target.checked)}
+        className="w-5 h-5 text-amber-600 rounded border-slate-300 cursor-pointer" />
+      <div>
+        {Icon && <div className="flex items-center gap-2"><Icon c="w-4 h-4 text-slate-400" /><span className="font-medium text-slate-700">{label}</span></div>}
+        {!Icon && <span className="font-medium text-slate-700">{label}</span>}
+        {sub && <div className="text-xs text-slate-500 mt-0.5">{sub}</div>}
+      </div>
+    </div>
+    <span className={`font-bold font-mono text-lg ${checked ? 'text-emerald-600' : 'text-slate-400'}`}>
+      {Math.round(value).toLocaleString()} ₪
+    </span>
+  </label>
+);
+
+const StatBadge = ({label, val, color}) => (
+  <div className={`flex justify-between items-center text-xs`}>
+    <span className="text-slate-600">• {label}</span>
+    <span className={`font-semibold ${color}`}>{val}</span>
+  </div>
+);
+
+// ============================================================
+// MAIN COMPONENT
+// ============================================================
+function SalaryCalculator() {
+  const [contractId, setContractId] = useState("551");
+  const [gradeId, setGradeId]       = useState(null);
+  const [overtimeHours, setOT]      = useState(15);
+  const [carType, setCar]           = useState("level3");
+  const [insuranceCost, setIns]     = useState(5000);
+  const [vehicleRegFee, setRegFee]  = useState(2326);
+  const [travelAllowance, setTravel] = useState(323);
+  const [childrenUnder5, setCh5]    = useState(2);
+  const [children6to18, setCh18]    = useState(0);
+  const [gender, setGender]         = useState("male");
+  const [hasDegree, setDeg]         = useState(true);
+  const [partnerWorks, setPartner]  = useState(true);
+  const [miluimDays, setMiluim]     = useState(0);
+  const [showAnnual, setShowAnn]    = useState(false);
+  // benefit toggles
+  const [inclIns, setInclIns]       = useState(true);
+  const [companyCar, setCompanyCar] = useState(false);
+  const [companyCarGroup, setCompanyCarGroup] = useState(3);
+  const [inclSF, setInclSF]         = useState(true);
+  const [inclPens, setInclPens]     = useState(true);
+  const [inclRec, setInclRec]       = useState(true);
+  const [inclCloth, setInclCloth]   = useState(true);
+  const [inclGifts, setInclGifts]   = useState(true);
+
+  const contract = CONTRACTS[contractId];
+
+  useEffect(() => {
+    setGradeId(contract.grades[Math.floor(contract.grades.length / 3)].id);
+  }, [contractId]);
+
+  const grade = useMemo(
+    () => contract.grades.find(g => g.id === gradeId) || contract.grades[0],
+    [contract, gradeId]
+  );
+
+  const nextGrade = useMemo(() => {
+    const idx = contract.grades.findIndex(g => g.id === gradeId);
+    return (idx >= 0 && idx < contract.grades.length - 1) ? contract.grades[idx + 1] : null;
+  }, [contract, gradeId]);
+
+  const params = {
+    overtimeHours, carType, childrenUnder5, children6to18,
+    gender, hasDegree, partnerWorks, miluimDays, insuranceCost,
+    vehicleRegFee, travelAllowance,
+    companyCar, companyCarGroup,
+    includeInsuranceRefund: inclIns,
+    includeStudyFund: inclSF,
+    includePension: inclPens,
+    includeRecovery: inclRec,
+    includeClothing: inclCloth,
+    includeGifts: inclGifts,
+  };
+
+  const R = useMemo(() => grade ? calcAll(grade.salary, contract, params) : null,
+    [grade, contract, JSON.stringify(params)]);
+
+  const NR = useMemo(() => nextGrade ? calcAll(nextGrade.salary, contract, params) : null,
+    [nextGrade, contract, JSON.stringify(params)]);
+
+  if (!R || !grade) return null;
+
+  const cp = CAR_PACKAGES[carType];
+
+  const sliderStyle = (val, max, color) => ({
+    background: `linear-gradient(to left, ${color} 0%, ${color} ${(val/max)*100}%, #e2e8f0 ${(val/max)*100}%, #e2e8f0 100%)`
+  });
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 p-3 md:p-6 font-sans text-slate-800">
+      <div className="max-w-7xl mx-auto space-y-6">
+
+        {/* ── Header ── */}
+        <header className="text-center pt-6 pb-2">
+          <div className={`inline-flex items-center justify-center p-4 bg-gradient-to-br ${contract.color} rounded-3xl shadow-2xl mb-5 transition-all duration-500`}>
+            <CalcIcon c="w-10 h-10 text-white" />
+          </div>
+          <h1 className="text-3xl md:text-4xl font-extrabold text-slate-900 mb-2">
+            מחשבון שכר — שירות המדינה
+          </h1>
+          <p className="text-slate-500 text-base">
+            עדכון מרץ 2024 (מדד 2.96%) • חישוב מלא כולל ניכויים, מס ותנאים סוציאליים
+          </p>
+          <div className="flex items-center justify-center gap-6 text-sm text-slate-500 mt-3">
+            <span className="flex items-center gap-1"><Ico.Check c="w-4 h-4 text-emerald-500" />כולל נקודות זיכוי</span>
+            <span className="flex items-center gap-1"><Ico.Shield c="w-4 h-4 text-blue-500" />מילואים</span>
+            <span className="flex items-center gap-1"><Ico.Zap c="w-4 h-4 text-amber-500" />חישוב בזמן אמת</span>
+          </div>
+        </header>
+
+        {/* ── Contract Selector ── */}
+        <Card className="p-5">
+          <div className="flex items-center gap-2 mb-3">
+            <div className={`p-2 bg-gradient-to-br ${contract.color} rounded-lg transition-all duration-300`}>
+              <Ico.Brief c="w-4 h-4 text-white" />
+            </div>
+            <span className="font-bold text-slate-800 text-lg">בחר חוזה / דירוג</span>
+            <span className="mr-auto text-xs bg-slate-100 text-slate-500 px-2 py-1 rounded-full">{Object.keys(CONTRACTS).length} דירוגים</span>
+          </div>
+          <div className={`mb-4 p-3 bg-gradient-to-l ${contract.color} rounded-xl text-white flex items-center justify-between`}>
+            <div><div className="text-xs opacity-80">נבחר כעת</div><div className="font-bold text-sm">{contract.name}</div></div>
+            <div className="text-xl font-extrabold opacity-70">#{contract.number}</div>
+          </div>
+          {(() => {
+            const [openGroups, setOpenGroups] = React.useState(() => {
+              // find which group the current contract belongs to
+              const active = {};
+              Object.entries(CONTRACT_GROUPS).forEach(([g, ids]) => {
+                active[g] = ids.includes(contractId);
+              });
+              return active;
+            });
+            const toggleGroup = (g) => setOpenGroups(prev => ({ ...prev, [g]: !prev[g] }));
+            return Object.entries(CONTRACT_GROUPS).map(([groupName, ids]) => {
+              const isOpen = openGroups[groupName];
+              const hasActive = ids.includes(contractId);
+              return (
+                <div key={groupName} className="mb-2 border border-slate-200 rounded-xl overflow-hidden">
+                  <button
+                    onClick={() => toggleGroup(groupName)}
+                    className={`w-full flex items-center justify-between px-3 py-2.5 text-right transition-all ${
+                      hasActive
+                        ? `bg-gradient-to-l ${contract.color} text-white`
+                        : 'bg-slate-50 hover:bg-slate-100 text-slate-700'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-sm">{groupName}</span>
+                      <span className={`text-xs px-1.5 py-0.5 rounded-full ${hasActive ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-500'}`}>
+                        {ids.filter(id => CONTRACTS[id]).length}
+                      </span>
+                      {hasActive && <span className="text-xs bg-white/25 px-2 py-0.5 rounded-full">✓ {contract.shortName}</span>}
+                    </div>
+                    <span className={`text-lg transition-transform duration-200 ${isOpen ? 'rotate-180' : ''} ${hasActive ? 'text-white' : 'text-slate-400'}`}>
+                      ▾
+                    </span>
+                  </button>
+                  {isOpen && (
+                    <div className="p-2 bg-white grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-1.5">
+                      {ids.map(id => {
+                        const ct = CONTRACTS[id];
+                        if (!ct) return null;
+                        return (
+                          <button key={id} onClick={() => setContractId(id)}
+                            className={`contract-btn p-2 rounded-lg border-2 text-right transition-all ${
+                              contractId === id
+                                ? `${ct.btnActive} text-white border-transparent shadow-md`
+                                : 'bg-slate-50 text-slate-700 border-slate-200 hover:border-slate-300 hover:bg-white'
+                            }`}>
+                            <div className={`text-xs mb-0.5 ${contractId === id ? 'opacity-70' : 'text-slate-400'}`}>{id}</div>
+                            <div className="text-xs font-bold leading-tight">{ct.shortName}</div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            });
+          })()}
+        </Card>
+
+        {/* ── Top Stats ── */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className={`bg-gradient-to-br ${contract.color} rounded-2xl p-5 text-white shadow-lg relative overflow-hidden`}>
+            <div className="absolute -bottom-4 -left-4 opacity-10"><Ico.Card c="w-32 h-32" /></div>
+            <div className="relative z-10">
+              <div className="flex items-center gap-2 mb-2"><Ico.Card c="w-5 h-5 opacity-80" /><span className="text-sm opacity-90">נטו חודשי</span></div>
+              <div className="text-4xl font-extrabold">{Math.round(R.netSalary).toLocaleString()} ₪</div>
+              <div className="text-xs opacity-70 mt-1 bg-white/20 inline-block px-2 py-1 rounded-lg">נכנס לחשבון ב-1 לחודש</div>
+            </div>
+          </div>
+          <div className="bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl p-5 text-white shadow-lg relative overflow-hidden cursor-pointer hover:scale-105 transition-transform"
+               onClick={() => setShowAnn(!showAnnual)}>
+            <div className="absolute -bottom-4 -left-4 opacity-10"><Ico.Trend c="w-32 h-32" /></div>
+            <div className="relative z-10">
+              <div className="flex items-center gap-2 mb-2"><Ico.Trend c="w-5 h-5 opacity-80" /><span className="text-sm opacity-90">{showAnnual ? "נטו שנתי" : "שווי כלכלי כולל"}</span></div>
+              <div className="text-4xl font-extrabold">{Math.round(showAnnual ? R.netSalary * 12 : R.totalEconomicValue).toLocaleString()} ₪</div>
+              <div className="text-xs opacity-70 mt-1 bg-white/20 inline-block px-2 py-1 rounded-lg">{showAnnual ? "12 חודשים" : "לחץ לסיכום שנתי"}</div>
+            </div>
+          </div>
+          <div className="bg-gradient-to-br from-violet-500 to-purple-600 rounded-2xl p-5 text-white shadow-lg relative overflow-hidden">
+            <div className="absolute -bottom-4 -left-4 opacity-10"><Ico.Cal c="w-32 h-32" /></div>
+            <div className="relative z-10">
+              <div className="flex items-center gap-2 mb-2"><Ico.Cal c="w-5 h-5 opacity-80" /><span className="text-sm opacity-90">ברוטו חודשי</span></div>
+              <div className="text-4xl font-extrabold">{Math.round(R.totalGross).toLocaleString()} ₪</div>
+              <div className="text-xs opacity-70 mt-1 bg-white/20 inline-block px-2 py-1 rounded-lg">לפני ניכויים ומסים</div>
+            </div>
+          </div>
+        </div>
+
+        {/* ── Main Grid ── */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+          {/* ── LEFT COLUMN ── */}
+          <div className="lg:col-span-5 space-y-5">
+
+            {/* Grade Selector */}
+            <Card className="p-6">
+              <SectionTitle icon={Ico.Brief} title="פרטי העסקה" subtitle="חוזה, דרגה ושעות עבודה" />
+              <div className="mb-4">
+                <label className="text-sm font-semibold text-slate-700 mb-2 block">דרגה</label>
+                <div className="relative">
+                  <select value={gradeId || ''} onChange={e => setGradeId(e.target.value)}
+                    className="w-full appearance-none bg-gradient-to-l from-slate-50 to-blue-50 border-2 border-slate-200 text-slate-800 py-3 px-4 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-semibold transition-all hover:border-blue-300">
+                    {contract.grades.map(g => (
+                      <option key={g.id} value={g.id}>{g.label} • {Math.round(g.salary).toLocaleString()} ₪</option>
+                    ))}
+                  </select>
+                  <Ico.Chevron c="w-5 h-5 text-slate-400 absolute left-4 top-3.5 pointer-events-none" />
+                </div>
+              </div>
+              {/* Overtime */}
+              <div>
+                <label className="text-sm font-semibold text-slate-700 mb-1 block">שעות נוספות בחודש</label>
+                <p className="text-xs text-slate-500 mb-2">שכר שעה: {R.hourlyRate.toFixed(2)} ₪ • 125%: {(R.hourlyRate*1.25).toFixed(2)} ₪ • 150%: {(R.hourlyRate*1.5).toFixed(2)} ₪</p>
+                <div className="flex items-center gap-3 mb-2">
+                  <input type="range" min="0" max="60" value={overtimeHours} onChange={e => setOT(Number(e.target.value))}
+                    className="flex-1 h-3 rounded-full appearance-none cursor-pointer" style={sliderStyle(overtimeHours, 60, '#f59e0b')} />
+                  <span className="w-16 text-center font-mono bg-gradient-to-br from-amber-500 to-orange-500 text-white py-2 px-2 rounded-xl font-bold text-lg shadow">{overtimeHours}</span>
+                </div>
+                {overtimeHours > 0 && (
+                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm space-y-1">
+                    <div className="flex justify-between"><span className="text-slate-600">{R.ot125h.toFixed(1)} שעות ב-125%:</span><span className="font-bold text-amber-700">+{Math.round(R.hourlyRate*1.25*R.ot125h).toLocaleString()} ₪</span></div>
+                    <div className="flex justify-between"><span className="text-slate-600">{R.ot150h.toFixed(1)} שעות ב-150%:</span><span className="font-bold text-amber-700">+{Math.round(R.hourlyRate*1.5*R.ot150h).toLocaleString()} ₪</span></div>
+                    <div className="flex justify-between pt-1 border-t border-amber-200 font-semibold"><span>סה״כ תוספת:</span><span className="text-amber-700">+{Math.round(R.overtimePay).toLocaleString()} ₪</span></div>
+                  </div>
+                )}
+              </div>
+            </Card>
+
+            {/* Car */}
+            <Card className="p-6">
+              <SectionTitle icon={Ico.Car} title="רכב ונסיעות" subtitle="חבילת ניידות ורכב שירות" />
+              <label className="text-sm font-semibold text-slate-700 mb-2 block">סוג זכאות לרכב</label>
+              <div className="grid grid-cols-2 gap-2 mb-4">
+                {Object.entries(CAR_PACKAGES).map(([k, p]) => (
+                  <button key={k} onClick={() => setCar(k)}
+                    className={`p-2.5 rounded-xl border-2 text-right transition-all ${
+                      carType === k
+                        ? 'bg-gradient-to-br from-amber-500 to-orange-600 text-white border-transparent shadow-md'
+                        : 'bg-slate-50 text-slate-700 border-slate-200 hover:border-amber-300 hover:bg-amber-50'
+                    }`}>
+                    <div className={`text-xs font-bold ${carType === k ? 'text-white' : 'text-slate-800'}`}>{p.label}</div>
+                    {p.isCar && <div className={`text-xs mt-0.5 ${carType === k ? 'opacity-80' : 'text-slate-500'}`}>
+                      חבילה: {p.value.toLocaleString()} ₪/חודש
+                    </div>}
+                  </button>
+                ))}
+              </div>
+
+              {/* קצובת נסיעה — תמיד מוצג */}
+              <div className="mb-4">
+                <label className="text-sm font-semibold text-slate-700 mb-2 block">קצובת נסיעה חודשית</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { val: 684, label: "מרחוק", sub: "684 ₪" },
+                    { val: 464, label: "בינוני",  sub: "464 ₪" },
+                    { val: 323, label: "מינימום", sub: "323 ₪" },
+                  ].map(opt => (
+                    <button key={opt.val} onClick={() => setTravel(opt.val)}
+                      className={`p-2.5 rounded-xl border-2 text-center transition-all ${
+                        travelAllowance === opt.val
+                          ? 'bg-gradient-to-br from-blue-500 to-indigo-600 text-white border-transparent shadow-md'
+                          : 'bg-slate-50 text-slate-700 border-slate-200 hover:border-blue-300 hover:bg-blue-50'
+                      }`}>
+                      <div className={`text-xs font-bold ${travelAllowance === opt.val ? 'text-white' : 'text-slate-800'}`}>{opt.label}</div>
+                      <div className={`text-xs mt-0.5 font-semibold ${travelAllowance === opt.val ? 'opacity-80' : 'text-slate-500'}`}>{opt.sub}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* רכב צמוד */}
+              <div className="mb-4 border-2 border-slate-200 rounded-xl overflow-hidden">
+                <label className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-slate-50 transition-all">
+                  <div className={`w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 transition-all ${
+                    companyCar ? 'bg-gradient-to-br from-slate-700 to-gray-800 border-slate-700' : 'border-slate-300 bg-white'
+                  }`} onClick={() => setCompanyCar(!companyCar)}>
+                    {companyCar && <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7"/></svg>}
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-sm font-semibold text-slate-800">רכב צמוד</div>
+                    <div className="text-xs text-slate-500">לבכירים בלבד — זקיפת הטבה נוספת לברוטו</div>
+                  </div>
+                </label>
+                {companyCar && (
+                  <div className="px-4 pb-4 bg-slate-50 border-t border-slate-200">
+                    <div className="text-xs font-semibold text-slate-600 mb-2 mt-3">קבוצת רכב צמוד:</div>
+                    <div className="grid grid-cols-3 gap-2">
+                      {[
+                        { g: 3, label: "קבוצה 3", imputation: 4390 },
+                        { g: 4, label: "קבוצה 4", imputation: 5260 },
+                        { g: 5, label: "קבוצה 5", imputation: 7280 },
+                      ].map(opt => (
+                        <button key={opt.g} onClick={() => setCompanyCarGroup(opt.g)}
+                          className={`p-2.5 rounded-xl border-2 text-center transition-all ${
+                            companyCarGroup === opt.g
+                              ? 'bg-gradient-to-br from-slate-700 to-gray-800 text-white border-transparent shadow-md'
+                              : 'bg-white text-slate-700 border-slate-200 hover:border-slate-400'
+                          }`}>
+                          <div className={`text-xs font-bold ${companyCarGroup === opt.g ? 'text-white' : 'text-slate-800'}`}>{opt.label}</div>
+                          <div className={`text-xs mt-0.5 ${companyCarGroup === opt.g ? 'opacity-75' : 'text-slate-500'}`}>{opt.imputation.toLocaleString()} ₪</div>
+                        </button>
+                      ))}
+                    </div>
+                    <div className="mt-3 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 flex items-start gap-2">
+                      <Ico.Info c="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+                      <div className="text-xs text-amber-800">
+                        <span className="font-semibold">זקיפת הטבה: {R.companyCarImputation.toLocaleString()} ₪/חודש</span> — נוספת לברוטו לצורך חישוב מס ובטל"א
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {cp.isCar && (
+                <>
+                  {/* Breakdown table */}
+                  <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl border-2 border-amber-200 overflow-hidden mb-4">
+                    <div className="px-3 py-2 bg-amber-100 border-b border-amber-200">
+                      <span className="text-xs font-bold text-amber-800">פירוט חבילת הניידות החודשית</span>
+                    </div>
+                    {[
+                      { label:"0700 רכב שירות", val: {level2:444, level3:570, level4:676}[carType] },
+                      { label:"0750 הוצאות קבועות", val: {level2:238, level3:318, level4:387}[carType] },
+                      { label:'1034 משתנות (500 ק"מ)', val: 340 },
+                      { label:"0560 קצובת נסיעה", val: travelAllowance },
+                    ].map(row => (
+                      <div key={row.label} className="flex justify-between items-center px-3 py-1.5 border-b border-amber-100 last:border-0">
+                        <span className="text-xs text-slate-600">{row.label}</span>
+                        <span className="text-xs font-semibold text-slate-800">{(row.val||0).toLocaleString()} ₪</span>
+                      </div>
+                    ))}
+                    <div className="flex justify-between items-center px-3 py-2 bg-amber-200/50">
+                      <span className="text-xs font-bold text-amber-900">סה"כ חבילת ניידות</span>
+                      <span className="text-sm font-extrabold text-amber-900">{(cp.value + travelAllowance).toLocaleString()} ₪</span>
+                    </div>
+                  </div>
+
+                  {/* ביטוח + אגרת רכב */}
+                  <div className="space-y-3">
+                    <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-4 rounded-xl border-2 border-blue-200">
+                      <label className="text-sm font-semibold text-slate-700 mb-1 block">עלות ביטוח שנתית</label>
+                      <p className="text-xs text-slate-500 mb-2">מקיף + חובה — תקרת החזר: 7,000 ₪</p>
+                      <div className="relative">
+                        <input type="number" min="0" max="7000" value={insuranceCost}
+                          onChange={e => setIns(Math.min(Number(e.target.value), 7000))}
+                          className="w-full bg-white border-2 border-blue-300 text-slate-800 py-2.5 px-4 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 font-semibold" />
+                        <span className="absolute left-4 top-3 text-slate-400 text-sm">₪</span>
+                      </div>
+                      <div className="flex justify-between items-center mt-2 text-xs text-blue-800 bg-blue-100 rounded-lg px-3 py-1.5">
+                        <span>החזר חודשי:</span>
+                        <span className="font-bold">{Math.round(R.insuranceRefundMonthly).toLocaleString()} ₪</span>
+                      </div>
+                    </div>
+
+                    <div className="bg-gradient-to-br from-purple-50 to-violet-50 p-4 rounded-xl border-2 border-purple-200">
+                      <label className="text-sm font-semibold text-slate-700 mb-1 block">אגרת רישוי רכב</label>
+                      <p className="text-xs text-slate-500 mb-2">תקרת החזר: 2,326 ₪ לשנה</p>
+                      <div className="relative">
+                        <input type="number" min="0" max="2326" value={vehicleRegFee}
+                          onChange={e => setRegFee(Math.min(Number(e.target.value), 2326))}
+                          className="w-full bg-white border-2 border-purple-300 text-slate-800 py-2.5 px-4 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 font-semibold" />
+                        <span className="absolute left-4 top-3 text-slate-400 text-sm">₪</span>
+                      </div>
+                      <div className="flex justify-between items-center mt-2 text-xs text-purple-800 bg-purple-100 rounded-lg px-3 py-1.5">
+                        <span>החזר חודשי:</span>
+                        <span className="font-bold">{Math.round(R.regFeeRefundMonthly).toLocaleString()} ₪</span>
+                      </div>
+                    </div>
+
+                    <div className="flex justify-between items-center bg-amber-100 border border-amber-300 rounded-xl px-4 py-2.5">
+                      <span className="text-sm font-semibold text-amber-900">סה"כ החזר חודשי (ביטוח + אגרה)</span>
+                      <span className="text-base font-extrabold text-amber-900">
+                        {Math.round(R.insuranceRefundMonthly + R.regFeeRefundMonthly).toLocaleString()} ₪
+                      </span>
+                    </div>
+                  </div>
+                </>
+              )}
+            </Card>
+
+            {/* Family & Tax Credits */}
+            <Card className="p-6">
+              <SectionTitle icon={Ico.Baby} title="משפחה ונקודות זיכוי" subtitle="הטבות משפחתיות ומס" />
+
+              {/* Gender */}
+              <div className="mb-4">
+                <label className="text-sm font-semibold text-slate-700 mb-2 block">מגדר (לצורך נקודות זיכוי)</label>
+                <div className="grid grid-cols-2 gap-3">
+                  {[{v:"male", label:"גבר (2.25 נק׳)", grad:"from-blue-500 to-indigo-600", border:"border-blue-600"},
+                    {v:"female", label:"אישה (2.75 נק׳)", grad:"from-pink-500 to-rose-600", border:"border-pink-600"}
+                  ].map(g => (
+                    <label key={g.v} className={`flex items-center justify-center p-3 rounded-xl cursor-pointer border-2 transition-all ${
+                      gender === g.v ? `bg-gradient-to-br ${g.grad} text-white ${g.border} shadow-lg` : 'bg-slate-50 border-slate-200 text-slate-700 hover:border-blue-300'
+                    }`}>
+                      <input type="radio" name="gender" value={g.v} checked={gender === g.v} onChange={() => setGender(g.v)} className="hidden" />
+                      <span className="font-semibold text-sm">{g.label}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Miluim */}
+              <div className="mb-4">
+                <label className="text-sm font-semibold text-slate-700 mb-1 block">ימי מילואים בשנה (2025)</label>
+                <p className="text-xs text-slate-500 mb-2">נקודות זיכוי מיוחדות ללוחמי מילואים</p>
+                <div className="flex items-center gap-3 mb-2">
+                  <input type="range" min="0" max="120" step="5" value={miluimDays} onChange={e => setMiluim(Number(e.target.value))}
+                    className="flex-1 h-3 rounded-full appearance-none cursor-pointer" style={sliderStyle(miluimDays, 120, '#10b981')} />
+                  <span className="w-16 text-center font-mono bg-gradient-to-br from-emerald-600 to-teal-600 text-white py-2 px-2 rounded-xl font-bold text-lg shadow">{miluimDays}</span>
+                </div>
+                {miluimDays >= 30 && (
+                  <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 text-sm">
+                    <div className="flex justify-between"><span className="text-slate-700 font-medium">נקודות זיכוי מילואים:</span><span className="font-bold text-emerald-700">{R.miluimPoints} נק׳</span></div>
+                    <div className="flex justify-between mt-1"><span className="text-slate-600 text-xs">הפחתת מס חודשית:</span><span className="font-bold text-emerald-600">{Math.round(R.miluimPoints * 242).toLocaleString()} ₪</span></div>
+                  </div>
+                )}
+                {miluimDays > 0 && miluimDays < 30 && (
+                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-700">נדרשים לפחות 30 ימי מילואים לזכאות לנקודות זיכוי</div>
+                )}
+              </div>
+
+              {/* Children */}
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                  <label className="text-sm font-semibold text-slate-700 mb-2 block">ילדים 0–5</label>
+                  <input type="number" min="0" max="10" value={childrenUnder5} onChange={e => setCh5(Number(e.target.value))}
+                    className="w-full bg-slate-50 border-2 border-slate-200 py-3 px-4 rounded-xl text-center font-bold text-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+                </div>
+                <div>
+                  <label className="text-sm font-semibold text-slate-700 mb-2 block">ילדים 6–18</label>
+                  <input type="number" min="0" max="10" value={children6to18} onChange={e => setCh18(Number(e.target.value))}
+                    className="w-full bg-slate-50 border-2 border-slate-200 py-3 px-4 rounded-xl text-center font-bold text-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+                </div>
+              </div>
+
+              {/* Partner & Degree */}
+              <div className="space-y-3 mb-4">
+                <label className={`flex items-center gap-3 p-4 rounded-xl cursor-pointer border-2 transition-all ${partnerWorks ? 'bg-gradient-to-l from-blue-50 to-indigo-50 border-blue-300' : 'bg-slate-50 border-slate-200 hover:border-blue-200'}`}>
+                  <input type="checkbox" checked={partnerWorks} onChange={e => setPartner(e.target.checked)} className="w-5 h-5 text-blue-600 rounded" />
+                  <div className="flex-1">
+                    <span className="font-semibold text-slate-800">בן/בת זוג עובד/ת</span>
+                    {partnerWorks && childrenUnder5 > 0 && (
+                      <div className="text-sm text-blue-700 mt-1">✓ זכאות לתוספת מעונות: +{Math.round(R.maonotPay).toLocaleString()} ₪{childrenUnder5 > 2 && <span className="text-amber-600"> (מקסימום 2 ילדים)</span>}</div>
+                    )}
+                  </div>
+                </label>
+                <label className={`flex items-center gap-3 p-4 rounded-xl cursor-pointer border-2 transition-all ${hasDegree ? 'bg-gradient-to-l from-purple-50 to-pink-50 border-purple-300' : 'bg-slate-50 border-slate-200 hover:border-purple-200'}`}>
+                  <input type="checkbox" checked={hasDegree} onChange={e => setDeg(e.target.checked)} className="w-5 h-5 text-purple-600 rounded" />
+                  <span className="font-semibold text-slate-800">תואר אקדמי (נקודת זיכוי נוספת)</span>
+                </label>
+              </div>
+
+              {/* Points summary */}
+              <div className="p-4 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl border-2 border-emerald-200">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="font-semibold text-slate-700">סה״כ נקודות זיכוי</span>
+                  <span className="text-2xl font-bold text-emerald-700">{R.points}</span>
+                </div>
+                <div className="space-y-1 text-xs mb-3">
+                  <StatBadge label={`תושב + מגדר (${gender === 'female' ? 'אישה' : 'גבר'})`} val={gender === 'female' ? '2.75' : '2.25'} color="text-slate-700" />
+                  {hasDegree && <StatBadge label="תואר אקדמי" val="1.0" color="text-slate-700" />}
+                  {childrenUnder5 > 0 && <StatBadge label={`ילדים 0–5 (×${childrenUnder5})`} val={childrenUnder5 * 2.5} color="text-slate-700" />}
+                  {children6to18 > 0 && <StatBadge label={`ילדים 6–18 (×${children6to18})`} val={children6to18 * 1} color="text-slate-700" />}
+                  {R.miluimPoints > 0 && <StatBadge label={`מילואים (${miluimDays} ימים)`} val={R.miluimPoints} color="text-emerald-700" />}
+                </div>
+                <div className="pt-2 border-t border-emerald-200 text-sm text-slate-600">
+                  שווי במס: <span className="font-bold text-emerald-700">{Math.round(R.taxCreditValue).toLocaleString()} ₪</span> חודשי
+                </div>
+              </div>
+            </Card>
+
+          </div>
+
+          {/* ── RIGHT COLUMN ── */}
+          <div className="lg:col-span-7 space-y-5">
+
+            {/* Payslip Breakdown */}
+            <Card className="p-6">
+              <SectionTitle icon={Ico.File} title="פירוט תלוש שכר" subtitle="ניתוח מלא של השכר החודשי" />
+
+              {/* Income */}
+              <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl p-4 border border-emerald-200 mb-4">
+                <h4 className="font-bold text-emerald-800 mb-3 flex items-center gap-2"><Ico.Trend c="w-5 h-5" />הכנסות (ברוטו)</h4>
+                <div className="space-y-1">
+                  <ResultRow label="שכר יסוד משולב" value={R.baseSalary} icon={Ico.Coin} />
+                  {R.overtimePay > 0 && <ResultRow label={`שעות נוספות (${overtimeHours}h: ${R.ot125h.toFixed(1)}×125% + ${R.ot150h.toFixed(1)}×150%)`} value={R.overtimePay} />}
+                  <ResultRow label="רכב / נסיעות" value={R.carGross} subValue={cp.label} icon={Ico.Car} />
+                  {R.maonotPay > 0 && <ResultRow label={`תוספת מעונות (${childrenUnder5} ילדים)`} value={R.maonotPay} icon={Ico.Baby} />}
+                  <div className="pt-2 mt-2 border-t-2 border-emerald-300">
+                    <ResultRow label='סה"כ ברוטו' value={R.totalGross} highlight />
+                  </div>
+                </div>
+              </div>
+
+              {/* Deductions */}
+              <div className="bg-gradient-to-br from-red-50 to-rose-50 rounded-xl p-4 border border-red-200 mb-4">
+                <h4 className="font-bold text-red-800 mb-3 flex items-center gap-2"><Ico.Card c="w-5 h-5" />ניכויים</h4>
+                <div className="space-y-1">
+                  <ResultRow label="מס הכנסה" value={R.incomeTax} isNeg subValue={`לאחר ${R.points} נקודות זיכוי${R.miluimPoints > 0 ? ` (כולל ${R.miluimPoints} מילואים)` : ''}`} />
+                  <ResultRow label="ביטוח לאומי + בריאות" value={R.socialSecurity} isNeg />
+                  <ResultRow label={`פנסיה (${(contract.pensionEmployee*100).toFixed(0)}%)`} value={R.pensionDed} isNeg subValue={`מ-${Math.round(R.baseSalary).toLocaleString()} ₪`} icon={Ico.Pig} />
+                  <ResultRow label={`קרן השתלמות (${(contract.studyFundEmployee*100).toFixed(1)}%)`} value={R.studyFundDed} isNeg subValue={`מ-${Math.round(R.baseSalary).toLocaleString()} ₪`} />
+                  <ResultRow label="דמי ועד" value={R.unionDues} isNeg />
+                  <div className="pt-2 mt-2 border-t-2 border-red-300">
+                    <ResultRow label='סה"כ ניכויים' value={R.totalDeductions} isNeg highlight />
+                  </div>
+                </div>
+              </div>
+
+              {/* Net */}
+              <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-xl p-5 text-white shadow-xl">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-blue-100 text-sm mb-1 font-medium">נטו לתשלום</div>
+                    <div className="text-5xl font-bold tracking-tight">{Math.round(R.netSalary).toLocaleString()} ₪</div>
+                    <div className="text-blue-200 text-sm mt-2">מועבר לחשבון ב-1 לחודש</div>
+                  </div>
+                  <Ico.Card c="w-20 h-20 text-blue-300 opacity-40" />
+                </div>
+              </div>
+            </Card>
+
+            {/* Benefits Toggles */}
+            <Card className="p-6 bg-gradient-to-br from-amber-50 to-yellow-50 border-amber-200">
+              <SectionTitle icon={Ico.Check} title="הטבות נוספות" subtitle="בחר אילו הטבות לכלול בחישוב השווי הכלכלי" />
+              <div className="space-y-3">
+                <BenefitToggle label="החזר ביטוח רכב (חודשי)" sub="מוחזר ישירות לחשבון" value={R.insuranceRefundMonthly} checked={inclIns} onChange={setInclIns} icon={Ico.Car} />
+                <BenefitToggle label={`הפרשת מעסיק לקה״ש (${(contract.studyFundEmployer*100).toFixed(1)}%)`} sub="נצבר בחסכון לטווח ארוך" value={R.studyFundEmployer} checked={inclSF} onChange={setInclSF} icon={Ico.Pig} />
+                <BenefitToggle label={`הפרשת מעסיק לפנסיה (${(contract.pensionEmployer*100).toFixed(1)}%)`} sub="כולל פיצויים" value={R.pensionEmployer} checked={inclPens} onChange={setInclPens} icon={Ico.Pig} />
+                <BenefitToggle label="דמי הבראה (שנתי)" sub="משולם פעם בשנה" value={R.recoveryPay} checked={inclRec} onChange={setInclRec} />
+                <BenefitToggle label="דמי ביגוד" value={R.clothing} checked={inclCloth} onChange={setInclCloth} />
+                <BenefitToggle label="מתנות לחגים" value={R.gifts} checked={inclGifts} onChange={setInclGifts} />
+
+                <div className="mt-4 p-4 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl text-white">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-emerald-100 text-sm mb-1">שווי כלכלי כולל</div>
+                      <div className="text-3xl font-bold">{Math.round(R.totalEconomicValue).toLocaleString()} ₪</div>
+                      <div className="text-emerald-100 text-xs mt-1">לחודש (לפי הבחירה שלך)</div>
+                    </div>
+                    <Ico.Trend c="w-16 h-16 text-emerald-200 opacity-40" />
+                  </div>
+                </div>
+              </div>
+            </Card>
+
+            {/* Promotion Comparison */}
+            {nextGrade && NR && (
+              <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl p-5 border border-amber-200">
+                <h4 className="font-bold text-slate-800 mb-4 flex items-center gap-2">
+                  <Ico.Trend c="w-5 h-5 text-amber-600" />
+                  מה קורה בקידום לדרגה הבאה?
+                </h4>
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-slate-600">דרגה נוכחית ({grade.label})</span>
+                    <span className="font-bold">{Math.round(R.netSalary).toLocaleString()} ₪</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-slate-600">דרגה הבאה ({nextGrade.label})</span>
+                    <span className="font-bold text-emerald-600">{Math.round(NR.netSalary).toLocaleString()} ₪</span>
+                  </div>
+                  <div className="pt-3 border-t border-amber-200 flex justify-between items-center">
+                    <span className="text-sm font-semibold text-amber-700">עלייה צפויה</span>
+                    <div className="text-left">
+                      <div className="font-bold text-emerald-600">+{Math.round(NR.netSalary - R.netSalary).toLocaleString()} ₪</div>
+                      <div className="text-xs text-slate-500">+{(((NR.netSalary - R.netSalary) / R.netSalary) * 100).toFixed(1)}% | שנתי: +{Math.round((NR.netSalary - R.netSalary)*12).toLocaleString()} ₪</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Annual Summary */}
+            <Card className="p-6 bg-gradient-to-br from-violet-50 to-purple-50 border-violet-200">
+              <SectionTitle icon={Ico.Cal} title="סיכום שנתי" subtitle="תחשיב להכנסה שנתית" />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {[
+                  {label:"נטו שנתי (12 חודשים)", val:R.netSalary*12, clr:"text-violet-700", bg:"border-violet-200"},
+                  {label:"שווי כלכלי שנתי", val:R.totalEconomicValue*12, clr:"text-emerald-600", bg:"border-emerald-200"},
+                  {label:"חיסכון שנתי לפנסיה", val:(R.pensionDed+R.pensionEmployer)*12, clr:"text-blue-600", bg:"border-blue-200", sub:"עובד + מעסיק"},
+                  {label:"חיסכון שנתי לקה״ש", val:(R.studyFundDed+R.studyFundEmployer)*12, clr:"text-indigo-600", bg:"border-indigo-200", sub:"עובד + מעסיק"},
+                ].map((s,i) => (
+                  <div key={i} className={`bg-white rounded-xl p-5 border-2 ${s.bg}`}>
+                    <div className="text-sm text-slate-600 mb-1">{s.label}</div>
+                    <div className={`text-3xl font-bold ${s.clr}`}>{Math.round(s.val).toLocaleString()} ₪</div>
+                    {s.sub && <div className="text-xs text-slate-500 mt-1">{s.sub}</div>}
+                  </div>
+                ))}
+              </div>
+            </Card>
+
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="text-center py-6 text-sm text-slate-500 space-y-1">
+          <p>💡 המחשבון מבוסס על נתוני עדכון ינואר 2024 (מדד 2.96%) ומספק הערכה כללית | {Object.keys(CONTRACTS).length} דירוגים זמינים</p>
+          <p>לחישוב מדויק יש להתייעץ עם מחלקת משאבי אנוש</p>
+          <p className="text-xs text-slate-400 mt-4 pt-4 border-t border-slate-200">© כל הזכויות שמורות ליוצר: יהודה סעדיה</p>
+        </div>
+
+      </div>
+    </div>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<SalaryCalculator />);
+</script>
+</body>
+</html>
