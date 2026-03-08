@@ -1,4 +1,5 @@
 import './globals.css';
+import { Analytics } from '@vercel/analytics/next';
 
 export const metadata = {
   title: 'סימולטור שכר שירות המדינה',
@@ -27,6 +28,7 @@ export default function RootLayout({ children }) {
       </head>
       <body className="bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 min-h-screen font-sans text-slate-800">
         {children}
+        <Analytics />
       </body>
     </html>
   );
