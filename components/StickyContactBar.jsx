@@ -31,7 +31,7 @@ export default function StickyContactBar({ contractColor }) {
               </svg>
             </div>
             <div className="text-white">
-              <div className="text-xs font-bold leading-tight">מחשבון שכר — שירות המדינה</div>
+              <div className="text-xs font-bold leading-tight">סימולטור שכר — שירות המדינה</div>
               <div className="text-xs opacity-70 leading-tight">עדכני לשנת 2025</div>
             </div>
           </div>
