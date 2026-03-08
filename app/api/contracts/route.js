@@ -25,8 +25,7 @@ export async function GET() {
       pensionEmployer: c.pensionEmployer,
       studyFundEmployee: c.studyFundEmployee,
       studyFundEmployer: c.studyFundEmployer,
-      // grades: only id and label — no salary values
-      grades: c.grades.map(g => ({ id: g.id, label: g.label })),
+      grades: c.grades.map(g => ({ id: g.id, label: g.label, salary: g.salary })),
     };
   }
 

@@ -137,6 +137,88 @@ export default function ResultsPanel({ result, contract, showAnnual, setShowAnnu
           </div>
         </div>
       </div>
+
+      {/* ── Annual Summary ── */}
+      <div className="bg-white rounded-2xl shadow-lg border border-slate-200 p-6">
+        <h3 className="text-lg font-bold text-slate-800 mb-5 flex items-center gap-2">
+          <svg className="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+          סיכום שנתי
+        </h3>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {/* Income */}
+          <div className="space-y-2">
+            <div className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">הכנסות שנתיות</div>
+            <div className="flex justify-between items-center bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3">
+              <span className="text-sm font-semibold text-slate-700">שכר נטו שנתי</span>
+              <span className="font-extrabold text-emerald-700 text-base">{fmt(R.netSalary * 12)} ₪</span>
+            </div>
+            <div className="flex justify-between items-center bg-slate-50 border border-slate-200 rounded-xl px-4 py-3">
+              <span className="text-sm font-semibold text-slate-700">שכר ברוטו שנתי</span>
+              <span className="font-bold text-slate-800 text-base">{fmt(R.totalGross * 12)} ₪</span>
+            </div>
+            <div className="flex justify-between items-center bg-blue-50 border border-blue-200 rounded-xl px-4 py-3">
+              <span className="text-sm font-semibold text-slate-700">ערך כלכלי שנתי</span>
+              <span className="font-bold text-blue-700 text-base">{fmt(R.totalEconomicValue * 12)} ₪</span>
+            </div>
+          </div>
+
+          {/* Deductions */}
+          <div className="space-y-2">
+            <div className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">ניכויים והפקדות שנתיות</div>
+            <div className="flex justify-between items-center bg-red-50 border border-red-200 rounded-xl px-4 py-3">
+              <span className="text-sm font-semibold text-slate-700">מס הכנסה שנתי</span>
+              <span className="font-bold text-red-600 text-base">−{fmt(R.incomeTax * 12)} ₪</span>
+            </div>
+            <div className="flex justify-between items-center bg-red-50 border border-red-200 rounded-xl px-4 py-3">
+              <span className="text-sm font-semibold text-slate-700">ביטוח לאומי שנתי</span>
+              <span className="font-bold text-red-600 text-base">−{fmt(R.socialSecurity * 12)} ₪</span>
+            </div>
+            <div className="flex justify-between items-center bg-blue-50 border border-blue-200 rounded-xl px-4 py-3">
+              <span className="text-sm font-semibold text-slate-700">הפקדה לפנסיה (עובד)</span>
+              <span className="font-bold text-blue-700 text-base">{fmt(R.pensionDed * 12)} ₪</span>
+            </div>
+            <div className="flex justify-between items-center bg-purple-50 border border-purple-200 rounded-xl px-4 py-3">
+              <span className="text-sm font-semibold text-slate-700">הפקדה לקרן השתלמות (עובד)</span>
+              <span className="font-bold text-purple-700 text-base">{fmt(R.studyFundDed * 12)} ₪</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Employer annual */}
+        <div className="mt-4 pt-4 border-t border-slate-100">
+          <div className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-3">הפרשות מעסיק שנתיות</div>
+          <div className="grid grid-cols-3 gap-3">
+            <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 text-center">
+              <div className="text-xs text-blue-600 font-semibold mb-1">פנסיה מעסיק</div>
+              <div className="font-extrabold text-blue-800 text-sm">{fmt(R.pensionEmployer * 12)} ₪</div>
+            </div>
+            <div className="bg-purple-50 border border-purple-200 rounded-xl p-3 text-center">
+              <div className="text-xs text-purple-600 font-semibold mb-1">קה״ש מעסיק</div>
+              <div className="font-extrabold text-purple-800 text-sm">{fmt(R.studyFundEmployer * 12)} ₪</div>
+            </div>
+            <div className="bg-orange-50 border border-orange-200 rounded-xl p-3 text-center">
+              <div className="text-xs text-orange-600 font-semibold mb-1">פיצויים (8.33%)</div>
+              <div className="font-extrabold text-orange-800 text-sm">{fmt(R.pensionableSalary * 0.0833 * 12)} ₪</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Total cost to employer */}
+        <div className="mt-4 p-4 bg-gradient-to-l from-slate-700 to-slate-900 rounded-xl text-white">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-sm font-semibold opacity-80">עלות מעסיק שנתית כוללת</div>
+              <div className="text-xs opacity-60 mt-0.5">ברוטו + כל הפרשות מעסיק</div>
+            </div>
+            <div className="text-2xl font-extrabold">
+              {fmt((R.totalGross + R.pensionEmployer + R.studyFundEmployer + R.pensionableSalary * 0.0833) * 12)} ₪
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
