@@ -281,20 +281,20 @@ export default function SalaryCalculatorPage() {
             <Ico.Calc c="w-10 h-10 text-white" />
           </div>
           <h1 className="text-3xl md:text-4xl font-extrabold text-slate-900 mb-2">
-            מחשבון שכר — שירות המדינה
+            סימולטור שכר — שירות המדינה
           </h1>
           <p className="text-slate-500 text-base mb-3">
-            עדכני לשנת 2025 • עדכון מרץ 2024 (מדד 2.96%) • חישוב מלא כולל ניכויים, מס ותנאים סוציאליים
+            עדכני לשנת 2025 • עדכון מרץ 2025 (מדד 2.96%) • חישוב מלא כולל ניכויים, מס ותנאים סוציאליים
           </p>
           <div className="inline-flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-xl px-4 py-2 mb-4 text-sm text-amber-800">
             <svg className="w-4 h-4 text-amber-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
             </svg>
-            <span>המחשבון <strong>אינו כולל</strong> שינויים זמניים בשכר בעקבות המלחמה</span>
+            <span>הסימולטור <strong>אינו כולל</strong> שינויים זמניים בשכר בעקבות המלחמה</span>
           </div>
           <div className="max-w-2xl mx-auto bg-white/60 backdrop-blur-sm border border-slate-200 rounded-2xl px-6 py-4 mb-4 text-right shadow-sm">
             <p className="text-sm text-slate-600 leading-relaxed">
-              מחשבון זה נועד <strong className="text-slate-800">לפשט ולהנגיש את עולם השכר בשירות הציבורי</strong> — מגוון הדירוגים, הרכיבים והניכויים יכול להיות מורכב ובלתי שקוף. כאן תוכלו לקבל תמונה ברורה ומהירה של השכר נטו, ערך התפקיד הכלכלי והשוואה בין דירוגים — הכל במקום אחד, בצורה פשוטה וזמינה לכולם.
+              סימולטור זה נועד <strong className="text-slate-800">לפשט ולהנגיש את עולם השכר בשירות הציבורי</strong> — מגוון הדירוגים, הרכיבים והניכויים יכול להיות מורכב ובלתי שקוף. כאן תוכלו לקבל תמונה ברורה ומהירה של השכר נטו, ערך התפקיד הכלכלי והשוואה בין דירוגים — הכל במקום אחד, בצורה פשוטה וזמינה לכולם.
             </p>
           </div>
           <div className="flex items-center justify-center gap-6 text-sm text-slate-500">
@@ -332,26 +332,10 @@ export default function SalaryCalculatorPage() {
           />
         </Card>
 
-        {/* ── Results (top stats) + Main Grid ── */}
-        {result && contract && (
-          <ResultsPanel
-            result={result}
-            contract={contract}
-            showAnnual={showAnnual}
-            setShowAnnual={setShowAnnual}
-          />
-        )}
-
-        {loading && !result && (
-          <div className="flex justify-center py-8">
-            <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
-          </div>
-        )}
-
-        {/* ── Main Grid ── */}
+        {/* ── Main Form Grid ── */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
-          {/* ── LEFT COLUMN ── */}
+          {/* ── LEFT COLUMN — פרטי העסקה ── */}
           <div className="lg:col-span-5 space-y-5">
 
             {/* Grade Selector */}
@@ -491,6 +475,31 @@ export default function SalaryCalculatorPage() {
                 </div>
               </Card>
             )}
+
+            {/* Seniority */}
+            <Card className="p-6">
+              <SectionTitle icon={Ico.Coin} title="ותק והבראה" subtitle="חישוב ימי הבראה לפי שנות ותק" />
+              <label className="text-sm font-semibold text-slate-700 mb-1 block">שנות ותק</label>
+              <div className="flex items-center gap-3 mb-2">
+                <input type="range" min="0" max="25" value={recoveryYears}
+                  onChange={e => setRecYears(Number(e.target.value))}
+                  className="flex-1 h-3 rounded-full appearance-none cursor-pointer"
+                  style={sliderStyle(recoveryYears, 25, '#f59e0b')} />
+                <span className="w-16 text-center font-mono bg-gradient-to-br from-amber-500 to-orange-500 text-white py-2 px-2 rounded-xl font-bold text-lg shadow">
+                  {recoveryYears}
+                </span>
+              </div>
+              {result && (
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm flex justify-between">
+                  <span className="text-slate-600">{result.recoveryDays} ימי הבראה × 374 ₪:</span>
+                  <span className="font-bold text-amber-700">{Math.round(result.recoveryPay).toLocaleString()} ₪/חודש</span>
+                </div>
+              )}
+            </Card>
+          </div>
+
+          {/* ── RIGHT COLUMN — פרטים נוספים ── */}
+          <div className="lg:col-span-7 space-y-5">
 
             {/* Vehicle */}
             <Card className="p-6">
@@ -699,84 +708,65 @@ export default function SalaryCalculatorPage() {
               )}
             </Card>
 
-            {/* Seniority */}
-            <Card className="p-6">
-              <SectionTitle icon={Ico.Coin} title="ותק והבראה" subtitle="חישוב ימי הבראה לפי שנות ותק" />
-              <label className="text-sm font-semibold text-slate-700 mb-1 block">שנות ותק</label>
-              <div className="flex items-center gap-3 mb-2">
-                <input type="range" min="0" max="25" value={recoveryYears}
-                  onChange={e => setRecYears(Number(e.target.value))}
-                  className="flex-1 h-3 rounded-full appearance-none cursor-pointer"
-                  style={sliderStyle(recoveryYears, 25, '#f59e0b')} />
-                <span className="w-16 text-center font-mono bg-gradient-to-br from-amber-500 to-orange-500 text-white py-2 px-2 rounded-xl font-bold text-lg shadow">
-                  {recoveryYears}
-                </span>
-              </div>
-              {result && (
-                <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm flex justify-between">
-                  <span className="text-slate-600">{result.recoveryDays} ימי הבראה × 374 ₪:</span>
-                  <span className="font-bold text-amber-700">{Math.round(result.recoveryPay).toLocaleString()} ₪/חודש</span>
-                </div>
-              )}
-            </Card>
-          </div>
-
-          {/* ── RIGHT COLUMN ── */}
-          <div className="lg:col-span-7 space-y-5">
-
-            {/* Economic value toggles */}
-            <Card className="p-6">
-              <SectionTitle icon={Ico.Coin} title="שווי כלכלי כולל" subtitle="בחר אילו הטבות לכלול בחישוב" />
-              {result ? (
-                <BenefitToggles
-                  result={result}
-                  toggles={toggles}
-                  setToggles={setToggles}
-                  hasCar={cp.isCar}
-                />
-              ) : (
-                <div className="text-center py-4 text-slate-400">ממתין לחישוב...</div>
-              )}
-
-              {result && (
-                <div className="mt-4 p-4 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl text-white">
-                  <div className="flex items-center justify-between">
-                    <span className="font-semibold">שווי כלכלי חודשי כולל</span>
-                    <span className="text-3xl font-extrabold">{Math.round(result.totalEconomicValue).toLocaleString('he-IL')} ₪</span>
-                  </div>
-                  <div className="text-sm opacity-80 mt-1">שנתי: {Math.round(result.totalEconomicValue * 12).toLocaleString('he-IL')} ₪</div>
-                </div>
-              )}
-            </Card>
-
-            {/* Payslip button */}
-            {result && (
-              <Card className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="font-bold text-slate-800 text-lg">תלוש שכר מדומה</h3>
-                    <p className="text-sm text-slate-500">סימולציה של תלוש שכר מלא לפי נתוני האוצר</p>
-                  </div>
-                  <button
-                    onClick={() => setShowPayslip(true)}
-                    className={`px-5 py-2.5 bg-gradient-to-br ${contract?.color || 'from-blue-600 to-indigo-700'} text-white rounded-xl font-bold text-sm shadow-lg hover:shadow-xl transition-all hover:scale-105`}
-                  >
-                    <Ico.File c="w-4 h-4 inline ml-2" />
-                    צפה בתלוש
-                  </button>
-                </div>
-              </Card>
-            )}
-
-            {/* Loading indicator */}
-            {loading && (
-              <div className="flex items-center gap-3 text-slate-500 text-sm p-4">
-                <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin flex-shrink-0" />
-                מחשב...
-              </div>
-            )}
           </div>
         </div>
+
+        {/* Loading indicator */}
+        {loading && (
+          <div className="flex justify-center py-8">
+            <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
+          </div>
+        )}
+
+        {/* ── Results Section ── */}
+        {result && contract && (
+          <div className="space-y-5">
+
+            {/* פירוט הכנסה והניכויים */}
+            <ResultsPanel
+              result={result}
+              contract={contract}
+              showAnnual={showAnnual}
+              setShowAnnual={setShowAnnual}
+            />
+
+            {/* שווי כלכלי */}
+            <Card className="p-6">
+              <SectionTitle icon={Ico.Coin} title="שווי כלכלי כולל" subtitle="בחר אילו הטבות לכלול בחישוב" />
+              <BenefitToggles
+                result={result}
+                toggles={toggles}
+                setToggles={setToggles}
+                hasCar={cp.isCar}
+              />
+              <div className="mt-4 p-4 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl text-white">
+                <div className="flex items-center justify-between">
+                  <span className="font-semibold">שווי כלכלי חודשי כולל</span>
+                  <span className="text-3xl font-extrabold">{Math.round(result.totalEconomicValue).toLocaleString('he-IL')} ₪</span>
+                </div>
+                <div className="text-sm opacity-80 mt-1">שנתי: {Math.round(result.totalEconomicValue * 12).toLocaleString('he-IL')} ₪</div>
+              </div>
+            </Card>
+
+            {/* תלוש שכר מדומה */}
+            <Card className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="font-bold text-slate-800 text-lg">תלוש שכר מדומה</h3>
+                  <p className="text-sm text-slate-500">סימולציה של תלוש שכר מלא לפי נתוני האוצר</p>
+                </div>
+                <button
+                  onClick={() => setShowPayslip(true)}
+                  className={`px-5 py-2.5 bg-gradient-to-br ${contract?.color || 'from-blue-600 to-indigo-700'} text-white rounded-xl font-bold text-sm shadow-lg hover:shadow-xl transition-all hover:scale-105`}
+                >
+                  <Ico.File c="w-4 h-4 inline ml-2" />
+                  צפה בתלוש
+                </button>
+              </div>
+            </Card>
+
+          </div>
+        )}
 
         {/* Footer */}
         <footer className="text-center py-8 border-t border-slate-200 mt-8" id="contact-anchor">
@@ -784,7 +774,7 @@ export default function SalaryCalculatorPage() {
             © 2025 יהודה סעדיה — כל הזכויות שמורות
           </div>
           <div className="text-xs text-slate-400">
-            מחשבון שכר שירות המדינה | עדכני לשנת 2025 | לייעוץ: yehoda.sadaay@gmail.com
+            סימולטור שכר שירות המדינה | עדכני לשנת 2025 | לייעוץ: yehoda.sadaay@gmail.com
           </div>
         </footer>
       </div>
