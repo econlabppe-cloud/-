@@ -1,8 +1,8 @@
 import './globals.css';
 
 export const metadata = {
-  title: 'סימולטור שכר שירות המדינה',
-  description: 'סימולטור שכר מקיף לעובדי שירות המדינה — עדכני לשנת 2025',
+  title: 'סימולטור שכר לחוזים אישיים בשירות המדינה',
+  description: 'סימולטור שכר מקיף לחוזים אישיים בשירות המדינה — עדכני לשנת 2025',
   icons: {
     icon: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧮</text></svg>",
   },
