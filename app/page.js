@@ -281,7 +281,7 @@ export default function SalaryCalculatorPage() {
             <Ico.Calc c="w-10 h-10 text-white" />
           </div>
           <h1 className="text-3xl md:text-4xl font-extrabold text-slate-900 mb-2">
-            סימולטור שכר — שירות המדינה
+            סימולטור שכר — חוזים אישיים בשירות המדינה
           </h1>
           <p className="text-slate-500 text-base mb-3">
             עדכני לשנת 2025 • מעודכן למדד 2025 • חישוב מלא כולל ניכויים, מס ותנאים סוציאליים
@@ -776,7 +776,7 @@ export default function SalaryCalculatorPage() {
                 <div className="inline-flex items-center justify-center w-14 h-14 bg-white/20 rounded-2xl mb-3">
                   <Ico.Calc c="w-7 h-7 text-white" />
                 </div>
-                <h2 className="text-2xl font-extrabold mb-1">סימולטור שכר — שירות המדינה</h2>
+                <h2 className="text-2xl font-extrabold mb-1">סימולטור שכר — חוזים אישיים בשירות המדינה</h2>
                 <p className="text-sm opacity-80">עדכני לשנת 2025 • מעודכן למדד 2025</p>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
