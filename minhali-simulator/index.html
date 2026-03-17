@@ -81,6 +81,7 @@ const fmt = n => Math.round(Math.abs(Number(n)||0)).toLocaleString('he-IL');
 const fmtF = n => Number(n||0).toFixed(2);
 
 function gradeIdx(key) { return Math.max(0, GRADE_OPTIONS.findIndex(g=>g[0]===key)); }
+function gradeNum(key) { return parseInt(String(key).replace('p','')); }
 function getSalary(key, yr, mo) {
   const idx=gradeIdx(key), max=MINHALI_TABLE.length-1;
   const row=Math.min(yr,max), next=Math.min(row+1,max);
@@ -154,7 +155,12 @@ function calcAll(params) {
   const c5401 = r2(b5401*.03875);
   const b5533 = r2(b5401+c5401);
   const c5533 = r2(b5533*.035);
-  const minBase = r2(v0002+c4983+c0647+c4550+c4544);
+  // דרגות 10-18+: סמל 4544 לא נספר בבסיס ההשלמה (לפי הסכם המסגרת 2001)
+  // דרגות 19+: סמל 4544 נספר כרגיל בבסיס ההשלמה
+  const gradeN = gradeNum(gradeKey);
+  const minBase = gradeN >= 19
+    ? r2(v0002+c4983+c0647+c4550+c4544)
+    : r2(v0002+c4983+c0647+c4550);
   const c1699 = r2(Math.max(0,MIN1699-minBase));
   const c5402 = cfg.code5402, c5524 = CODE5524;
   const grossFixed = r2(base+c4983+c0647+c4550+c4544+c4934+c4994+c5401+c5402+c5524+c5533+c1699);
@@ -237,8 +243,8 @@ function calcAll(params) {
   const regRefund = inclRegRefund ? r2(Math.min(vehicleRegFee||0,REG_REFUND_CAP)/12) : 0;
   const empPension = r2(base165*0.135);
   const empStudy = r2(base164*0.075);
-  // מענק יובל — אוטומטי לעובדים עם יותר מ-30 שנות ותק (60% מברוטו לפנסיה ÷ 12)
-  const jubileeMonthly = sen.yr > 30 ? r2(base165 * 0.60 / 12) : 0;
+  // מענק יובל — אוטומטי לעובדים עם 25 שנות ותק ומעלה (60% מברוטו לפנסיה ÷ 12)
+  const jubileeMonthly = sen.yr >= 25 ? r2(base165 * 0.60 / 12) : 0;
   let econVal = net;
   if(inclRec)   econVal+=recPay;
   if(inclCloth) econVal+=CLOTHING;
@@ -250,7 +256,7 @@ function calcAll(params) {
   if(inclPension)   econVal+=empPension;
   if(jubileeMonthly>0) econVal+=jubileeMonthly;
 
-  return {v0002,v0003,base,c4983,c0647,c4550,c4544,c4934,c4994,c5401,c5402,c5524,c5533,c1699,minBase,grossFixed,hourly,
+  return {v0002,v0003,base,c4983,c0647,c4550,c4544,c4934,c4994,c5401,c5402,c5524,c5533,c1699,minBase,gradeN,grossFixed,hourly,
     w1100,w1125,w1150,oncallPay,w4322,workTotal,
     exp0560,exp0700,exp0750,exp1034,exp1492,exp1493,exp1700,expTotal,
     maonotPay,maonotCount,under5,b4425:0,b5288:b5288||0,
@@ -581,7 +587,7 @@ function App() {
                 <div>
                   <div className="font-semibold text-amber-800 text-sm">🎖 מענק יובל — אוטומטי</div>
                   <div className="text-xs text-amber-700 mt-0.5">{fmt(R.base165)} ₪ × 60% ÷ 12 = <strong>{fmt(R.jubileeMonthly)} ₪/חודש</strong></div>
-                  <div className="text-xs text-amber-600">ותק מעל 30 שנה • מענק שנתי מחולק ל-12</div>
+                  <div className="text-xs text-amber-600">ותק מ-25 שנה ומעלה • מענק שנתי מחולק ל-12</div>
                 </div>
                 <span className="font-bold text-emerald-600 text-base">+{fmt(R.jubileeMonthly)} ₪</span>
               </div>
@@ -636,9 +642,10 @@ function App() {
                 <>
                   <p className="text-xs text-slate-500 mb-2">כוננות = שעה אחת × {fmtF(R.hourly)} ₪ = <strong className="text-violet-700">{fmtF(R.hourly)} ₪</strong></p>
                   <div className="flex items-center gap-3 mb-2">
-                    <input type="range" min="0" max="16" value={oncall} onChange={e=>setOncall(Number(e.target.value))}
+                    <input type="range" min="0" max="16" step="0.5" value={oncall} onChange={e=>setOncall(Number(e.target.value))}
                       className="flex-1 h-3 rounded-full appearance-none cursor-pointer" style={sliderStyle(oncall,16,'#8b5cf6')}/>
-                    <span className="w-14 text-center font-mono bg-gradient-to-br from-violet-500 to-purple-600 text-white py-2 px-2 rounded-xl font-bold text-xl shadow">{oncall}</span>
+                    <input type="number" min="0" max="99" step="0.5" value={oncall} onChange={e=>setOncall(Math.max(0,Number(e.target.value)))}
+                      className="w-16 text-center font-mono bg-gradient-to-br from-violet-500 to-purple-600 text-white py-2 px-1 rounded-xl font-bold text-lg shadow border-0 outline-none"/>
                   </div>
                   <div className="flex justify-between text-xs text-slate-400 px-1 mb-2"><span>0</span><span>4</span><span>8</span><span>12</span><span>16</span></div>
                   {oncall>0&&<div className="bg-violet-50 border border-violet-200 rounded-xl p-2.5 text-sm flex justify-between font-semibold">
@@ -839,9 +846,9 @@ function App() {
               <ResultRow label="קה״ש עובד (2.5%)" value={R.studyFundDed} isNeg sub={`מ-${fmt(R.base164)} ₪ (164)`}/>
               <ResultRow label="קציבית 2200 (2%)" value={R.code2200} isNeg/>
               <ResultRow label="קופות 5%/7%" value={r2(R.code5+R.code7)} isNeg sub={`167=${fmt(R.base167)}, 166=${fmt(R.base166)}`}/>
-              {R.dues>0&&<ResultRow label="דמי חבר" value={R.dues} isNeg/>}
+              {R.dues>0&&<ResultRow label="דמי חבר בהסתדרות" value={R.dues} isNeg/>}
               <ResultRow label="ביטוח הדדי 2310" value={R.mutual2310} isNeg/>
-              <ResultRow label="ועד האוצר 7546 (0.4%)" value={R.vaad7546} isNeg/>
+              <ResultRow label="דמי וועד 7546 (0.4%)" value={R.vaad7546} isNeg/>
               <div className="pt-2 mt-2 border-t-2 border-red-300">
                 <ResultRow label='סה״כ ניכויים' value={R.totalDed} isNeg highlight/>
               </div>
@@ -871,7 +878,7 @@ function App() {
         <Card className="p-5">
           <SectionTitle icon={Ico.Brief} title="ניכויים אישיים" subtitle="דמי חבר ועוד"/>
           <div className="mb-3">
-            <label className="text-sm font-semibold text-slate-700 mb-2 block">דמי חבר 7675/7676</label>
+            <label className="text-sm font-semibold text-slate-700 mb-2 block">דמי חבר בהסתדרות 7675/7676</label>
             <div className="grid grid-cols-3 gap-2">
               {[{v:0,l:'ללא'},{v:0.0075,l:'0.75%'},{v:0.009,l:'0.9%'}].map(opt=>(
                 <button key={opt.v} onClick={()=>setDuesRate(opt.v)} className={`py-2.5 rounded-xl border-2 text-sm font-bold transition-all ${duesRate===opt.v?`bg-gradient-to-br ${ACCENT} text-white border-transparent shadow`:'bg-slate-50 border-slate-200 hover:border-blue-300'}`}>{opt.l}</button>
@@ -1189,7 +1196,7 @@ const PayslipTabs = ({R, f, ff, PR, DR, ER, SH, TR, TD, TH, workTotal, chainTota
               <PR code="5402" name="שקלית 2016" total={R.c5402} note="קבוע"/>
               <PR code="5524" name="תוספת 2023" total={R.c5524} note="קבוע"/>
               <PR code="5533" name="תוספת 2024" qty="3.5%" total={R.c5533}/>
-              {R.c1699>0&&<PR code="1699" name="תוספת חוק (השלמת מינימום)" total={R.c1699} note={`${f(MIN1699)} − ${f(R.minBase)} ₪`}/>}
+              {R.c1699>0&&<PR code="1699" name="תוספת חוק (השלמת מינימום)" total={R.c1699} note={`${f(MIN1699)} − ${f(R.minBase)} ₪ | ${R.gradeN>=19?'דרגה 19+: 4544 נספרת':'דרגה 10-18+: 4544 לא נספרת'}`}/>}
               <PR name="סה״כ ברוטו קבוע (165)" total={R.grossFixed} hi/>
 
               {workTotal>0&&<>
@@ -1246,8 +1253,8 @@ const PayslipTabs = ({R, f, ff, PR, DR, ER, SH, TR, TD, TH, workTotal, chainTota
               <DR code="6T22" name={`קופ גמל 2.5% (164)`} pct="2.5" base={f(R.base164)+" ₪"} total={R.code25}/>
               <SH title="ניכויים אישיים" color="bg-gray-50"/>
               <DR code="2310" name="ביטוח הדדי" total={R.mutual2310}/>
-              <DR code="7546" name="ועד האוצר" pct="0.4" base={f(R.base165)+" ₪"} total={R.vaad7546}/>
-              {R.dues>0&&<DR code="767x" name="דמי חבר" base={f(R.base165)+" ₪"} total={R.dues}/>}
+              <DR code="7546" name="דמי וועד" pct="0.4" base={f(R.base165)+" ₪"} total={R.vaad7546}/>
+              {R.dues>0&&<DR code="767x" name="דמי חבר בהסתדרות" base={f(R.base165)+" ₪"} total={R.dues}/>}
               <TR cls="bg-red-50 border-t-2 border-red-300">
                 <TD ch="" cls="w-12"/><TD ch='סה״כ ניכויים' cls="font-black text-red-900 text-sm"/>
                 <TD ch=""/><TD ch=""/>
@@ -1417,7 +1424,7 @@ const StickyBar = ({R, ACCENT}) => {
         <div className="max-w-7xl mx-auto px-4 py-2.5 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center"><Ico.Calc c="w-4 h-4 text-white"/></div>
-            <div className="text-white"><div className="text-xs font-bold">סימולטור שכר מינהלי</div><div className="text-xs opacity-70">עדכני 2025</div></div>
+            <div className="text-white"><div className="text-xs font-bold">סימולטור שכר מינהלי</div><div className="text-xs opacity-70">עדכני 2025 | יהודה סעדיה</div></div>
           </div>
           <div className="flex items-center gap-4 text-white">
             <div className="text-center"><div className="text-xs opacity-70">נטו</div><div className="font-extrabold text-lg">{fmt(R.net)} ₪</div></div>
