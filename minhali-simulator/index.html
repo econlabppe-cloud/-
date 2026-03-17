@@ -54,9 +54,9 @@ const REG_REFUND_CAP = 2326;
 const CAR_LEVELS = {
   none: { label: "ללא רכב",  sub: "אין רכב שירות",       pkg:    0, u0700:0, u0750:0, q1034:  0, color:"from-slate-500 to-gray-600" },
   A:    { label: "רמה א׳",   sub: "TBD — יעודכן בהמשך",  pkg:    0, u0700:0, u0750:0, q1034:  0, color:"from-amber-400 to-orange-400" },
-  B:    { label: "רמה ב׳",   sub: "חבילה: 1,022 ₪/חודש", pkg: 1022, u0700:3, u0750:3, q1034:330, color:"from-amber-500 to-orange-500" },
-  C:    { label: "רמה ג׳",   sub: "חבילה: 1,228 ₪/חודש", pkg: 1228, u0700:4, u0750:4, q1034:243, color:"from-amber-500 to-orange-500" },
-  D:    { label: "רמה ד׳",   sub: "חבילה: 1,403 ₪/חודש", pkg: 1403, u0700:4, u0750:4, q1034:500, color:"from-amber-500 to-orange-500" },
+  B:    { label: "רמה ב׳",   sub: "חבילה: 1,022 ₪/חודש", pkg: 1022, u0700:444, u0750:238, q1034:340, color:"from-amber-500 to-orange-500" },
+  C:    { label: "רמה ג׳",   sub: "חבילה: 1,228 ₪/חודש", pkg: 1228, u0700:570, u0750:318, q1034:340, color:"from-amber-500 to-orange-500" },
+  D:    { label: "רמה ד׳",   sub: "חבילה: 1,403 ₪/חודש", pkg: 1403, u0700:676, u0750:387, q1034:340, color:"from-amber-500 to-orange-500" },
 };
 
 // קצובת נסיעה — עצמאית לחלוטין, לפי מרחק מהבית לעבודה (מינימום 323 ₪)
@@ -155,7 +155,7 @@ function calcAll(params) {
   const b5533 = r2(b5401+c5401);
   const c5533 = r2(b5533*.035);
   const minBase = r2(v0002+c4983+c0647+c4550+c4544);
-  const c1699 = r2(Math.max(0,MIN1699-minBase));
+  const c1699 = r2(Math.max(0,MIN1699-r2(v0002+c4550)));
   const c5402 = cfg.code5402, c5524 = CODE5524;
   const grossFixed = r2(base+c4983+c0647+c4550+c4544+c4934+c4994+c5401+c5402+c5524+c5533+c1699);
   const hourly = r2(grossFixed/MONTHLY_HOURS);
@@ -169,9 +169,9 @@ function calcAll(params) {
   const workTotal = r2(w1100+w1125+w1150+oncallPay+w4322);
 
   // Expenses
-  const exp0700 = r2((u0700||0)*169);
-  const exp0750 = r2((u0750||0)*96.75);
-  const exp1034 = r2((q1034||0)*0.68);
+  const exp0700 = r2(u0700||0);
+  const exp0750 = r2(u0750||0);
+  const exp1034 = r2(q1034||0);
   const exp1492 = r2(amt1492||0);
   const exp1493 = r2(amt1493||0);
   const exp1700 = r2((days1700||0)*(econRate||21.10));
@@ -681,9 +681,9 @@ function App() {
               <div className="mt-2 bg-amber-50 border border-amber-200 rounded-xl overflow-hidden">
                 <div className="px-3 py-1.5 bg-amber-100 border-b border-amber-200 text-xs font-bold text-amber-800">פירוט חבילת הרכב — {CAR_LEVELS[carLevel].label}</div>
                 {[
-                  {label:'0700 קרן שעות רכב', val:R.exp0700, sub:`${carVals.u0700} יח׳`},
-                  {label:'0750 הוצ. רכב קבועות', val:R.exp0750, sub:`${carVals.u0750} יח׳`},
-                  {label:'1034 משתנות', val:R.exp1034, sub:''},
+                  {label:'0700 קרן שעות רכב', val:R.exp0700, sub:''},
+                  {label:'0750 הוצ. רכב קבועות', val:R.exp0750, sub:''},
+                  {label:'1034 משתנות (500 ק"מ)', val:R.exp1034, sub:''},
                 ].filter(r=>r.val>0).map(r=>(
                   <div key={r.label} className="flex justify-between items-center px-3 py-1.5 border-b border-amber-100 last:border-0 text-sm">
                     <span className="text-slate-600">{r.label} <span className="text-xs text-slate-400">{r.sub}</span></span>
@@ -1204,9 +1204,9 @@ const PayslipTabs = ({R, f, ff, PR, DR, ER, SH, TR, TD, TH, workTotal, chainTota
               {R.expTotal>0&&<>
                 <SH title="החזרי הוצאות" total={R.expTotal} color="bg-emerald-50"/>
                 {R.exp0560>0&&<PR code="0560" name="קצובת נסיעה" total={R.exp0560} note="לפי מרחק מהבית"/>}
-                {R.exp0700>0&&<PR code="0700" name="קרן שעות רכב" qty={ff(R.exp0700/169)+" יח׳"} rate="169 ₪" total={R.exp0700}/>}
-                {R.exp0750>0&&<PR code="0750" name="הוצ. רכב קבועות" qty={ff(R.exp0750/96.75)+" יח׳"} rate="96.75 ₪" total={R.exp0750}/>}
-                {R.exp1034>0&&<PR code="1034" name="משתנות רגלי" qty={ff(R.exp1034/0.68)+" ק״מ"} rate="0.68 ₪" total={R.exp1034}/>}
+                {R.exp0700>0&&<PR code="0700" name="קרן שעות רכב" total={R.exp0700}/>}
+                {R.exp0750>0&&<PR code="0750" name="הוצ. רכב קבועות" total={R.exp0750}/>}
+                {R.exp1034>0&&<PR code="1034" name="משתנות רגלי" qty="500 ק״מ" rate="0.68 ₪" total={R.exp1034}/>}
               </>}
 
               {(R.maonotPay>0||R.b4425>0||R.b5288>0||R.h11>0)&&<>
