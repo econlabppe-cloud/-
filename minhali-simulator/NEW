@@ -246,8 +246,10 @@ function calcAll(params) {
   const recPay = r2(recD*RECOVERY_RATE/12);
   const insRefund = inclInsRefund ? r2(Math.min(insuranceCost||0,INS_REFUND_CAP)/12) : 0;
   const regRefund = inclRegRefund ? r2(Math.min(vehicleRegFee||0,REG_REFUND_CAP)/12) : 0;
-  const empPension = r2(base165*0.135);
-  const empStudy = r2(base164*0.075);
+  // בפנסיה תקציבית — אין הפקדה חודשית אמיתית של מעסיק לקרן. הזכות נצברת מתקציב המדינה.
+  const empPension = isBudgetary ? 0 : r2(base165*0.135);
+  const empSeverance = isBudgetary ? 0 : r2(base165*0.0833);
+  const empStudy = r2(base164*0.075); // קרן השתלמות — קיימת גם בתקציבית
   // מענק יובל — אוטומטי לעובדים עם 25 שנות ותק ומעלה (60% מברוטו לפנסיה ÷ 12)
   const jubileeMonthly = sen.yr >= 25 ? r2(base165 * 0.60 / 12) : 0;
   let econVal = net;
@@ -268,7 +270,7 @@ function calcAll(params) {
     base165,base166,base167,base164,h11,protGross,code4150,code4854,c4112,code2200,
     incomeTax,ni,pensionDed,studyFundDed,code5,code7,code25,dues,mutual2310,vaad7546,
     duesBase,isBudgetary,
-    totalDed,net,gross,pts,recD,recPay,empPension,empStudy,insRefund,regRefund,econVal,
+    totalDed,net,gross,pts,recD,recPay,empPension,empSeverance,empStudy,insRefund,regRefund,econVal,
     jubileeMonthly,
     miluimPoints:miluimPts(miluimDays||0)
   };
@@ -1039,7 +1041,7 @@ function App() {
             </div>
 
             <BenefitToggle label={`קה״ש מעסיק (7.5% מ-164)`} sub={`${fmt(R.base164)} ₪ × 7.5% | שווי כלכלי — לא נכנס לנטו`} value={R.empStudy} on={inclStudy} onToggle={()=>setInclStudy(!inclStudy)}/>
-            <BenefitToggle label={`פנסיה מעסיק (13.5% מ-165)`} sub={`${fmt(R.base165)} ₪ × 13.5% | שווי כלכלי — לא נכנס לנטו`} value={R.empPension} on={inclPension} onToggle={()=>setInclPens(!inclPension)}/>
+            {!R.isBudgetary && <BenefitToggle label={`פנסיה מעסיק (13.5% מ-165)`} sub={`${fmt(R.base165)} ₪ × 13.5% | שווי כלכלי — לא נכנס לנטו`} value={R.empPension} on={inclPension} onToggle={()=>setInclPens(!inclPension)}/>}
 
             {/* מענק יובל — אוטומטי לוותק > 30 שנה */}
             {R.jubileeMonthly > 0 && (
@@ -1074,7 +1076,7 @@ function App() {
             {[
               {label:'נטו שנתי',val:R.net*12,clr:'text-violet-700',bg:'border-violet-200'},
               {label:'שווי כלכלי שנתי',val:R.econVal*12,clr:'text-emerald-600',bg:'border-emerald-200'},
-              {label:'חיסכון שנתי פנסיה',val:(R.isBudgetary?(R.code2200+R.code7):R.pensionDed+R.empPension)*12,clr:'text-blue-600',bg:'border-blue-200',sub:R.isBudgetary?'2200+7% (עובד)':'עובד + מעסיק'},
+              {label:R.isBudgetary?'ניכוי עובד לפנסיה תקציבית':'חיסכון שנתי פנסיה',val:(R.isBudgetary?R.code2200:R.pensionDed+R.empPension)*12,clr:'text-blue-600',bg:'border-blue-200',sub:R.isBudgetary?'2% מ-165 (עובד בלבד)':'עובד + מעסיק'},
               {label:'חיסכון שנתי קה״ש',val:(R.isBudgetary?R.code25:R.studyFundDed+R.empStudy)*12,clr:'text-indigo-600',bg:'border-indigo-200',sub:R.isBudgetary?'2.5% עובד':'עובד + מעסיק'},
             ].map((s,i)=>(
               <div key={i} className={`bg-white rounded-xl p-4 border-2 ${s.bg}`}>
@@ -1432,14 +1434,26 @@ const PayslipTabs = ({R, f, ff, PR, DR, ER, SH, TR, TD, TH, workTotal, chainTota
 
           {/* הפרשות מעסיק */}
           <div className="px-4 pb-1"><div className="text-xs font-black text-gray-700 border-b-2 border-gray-400 pb-1">הפרשות מעסיק (אינן מנוכות)</div></div>
-          <table className="w-full mb-4">
-            <thead><TR><TH ch="" cls="w-12"/><TH ch="רכיב"/><TH ch="%" cls="w-16 text-center"/><TH ch="בסיס" cls="w-20 text-center"/><TH ch="סכום" cls="w-20 text-left"/></TR></thead>
-            <tbody>
-              <ER name="פנסיה מעסיק (13.5%)" pct="13.5" base={f(R.base165)+" ₪"} total={R.empPension}/>
-              <ER name="פיצויים (8.33%)" pct="8.33" base={f(R.base165)+" ₪"} total={r2(R.base165*0.0833)}/>
-              <ER name={`קה״ש מעסיק (7.5%)`} pct="7.5" base={f(R.base164)+" ₪"} total={R.empStudy}/>
-            </tbody>
-          </table>
+          {isBudgetary ? (
+            <div className="mx-4 mb-4 bg-blue-50 border border-blue-200 rounded-xl p-3 text-xs text-blue-800 leading-relaxed">
+              <strong>פנסיה תקציבית:</strong> אין הפקדה חודשית לקרן פנסיה — הזכות נצברת ומשולמת בעתיד ישירות מתקציב המדינה.
+              <table className="w-full mt-2">
+                <thead><TR><TH ch="" cls="w-12"/><TH ch="רכיב"/><TH ch="%" cls="w-16 text-center"/><TH ch="בסיס" cls="w-20 text-center"/><TH ch="סכום" cls="w-20 text-left"/></TR></thead>
+                <tbody>
+                  <ER name={`קה״ש מעסיק (7.5%)`} pct="7.5" base={f(R.base164)+" ₪"} total={R.empStudy}/>
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <table className="w-full mb-4">
+              <thead><TR><TH ch="" cls="w-12"/><TH ch="רכיב"/><TH ch="%" cls="w-16 text-center"/><TH ch="בסיס" cls="w-20 text-center"/><TH ch="סכום" cls="w-20 text-left"/></TR></thead>
+              <tbody>
+                <ER name="פנסיה מעסיק (13.5%)" pct="13.5" base={f(R.base165)+" ₪"} total={R.empPension}/>
+                <ER name="פיצויים (8.33%)" pct="8.33" base={f(R.base165)+" ₪"} total={R.empSeverance}/>
+                <ER name={`קה״ש מעסיק (7.5%)`} pct="7.5" base={f(R.base164)+" ₪"} total={R.empStudy}/>
+              </tbody>
+            </table>
+          )}
 
           <div className="mx-4 mb-4 bg-gray-50 rounded-xl border border-gray-200 p-3">
             <div className="text-xs font-bold text-gray-600 mb-2">נתוני עזר</div>
@@ -1548,8 +1562,10 @@ const PayslipTabs = ({R, f, ff, PR, DR, ER, SH, TR, TD, TH, workTotal, chainTota
           <div className="bg-amber-50 border-2 border-amber-200 rounded-xl p-4">
             <div className="text-sm font-bold text-amber-800 mb-2">💼 שווי כלכלי כולל: {f(R.econVal)} ₪/חודש</div>
             <div className="text-xs text-amber-700 leading-relaxed">
-              מעבר לנטו, החבילה כוללת גם הפרשות מעסיק לפנסיה ({f(R.empPension)} ₪) 
-              ולקה״ש ({f(R.empStudy)} ₪), דמי הבראה ועוד הטבות שנלקחו בחשבון.
+              {R.isBudgetary
+                ? <>מעבר לנטו, החבילה כוללת קרן השתלמות מעסיק ({f(R.empStudy)} ₪), דמי הבראה ועוד הטבות. בפנסיה תקציבית אין הפרשה חודשית לקרן — הזכות נצברת מתקציב המדינה.</>
+                : <>מעבר לנטו, החבילה כוללת גם הפרשות מעסיק לפנסיה ({f(R.empPension)} ₪) ולקה״ש ({f(R.empStudy)} ₪), דמי הבראה ועוד הטבות שנלקחו בחשבון.</>
+              }
             </div>
           </div>
 
