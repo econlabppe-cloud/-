@@ -124,11 +124,13 @@ function calcAll(params) {
   const { gradeKey, vatek, mgmtUnits, inc0647, year,
     carLevel, u0700, u0750, q1034, amt1492, amt1493, days1700, econRate, travel,
     ot100, ot125, ot150, oncall, diff4322, b4425, b5288,
+    amt2666, amt4970,
     gender, childrenAges, hasDegree, miluimDays, recoveryYrs,
     inclMaonot, partnerMaonot,
     inclRec, inclCloth, inclGifts, inclCibus, inclPhone,
     inclInsRefund, inclRegRefund, insuranceCost, vehicleRegFee,
-    inclStudyFund, inclPension, duesRate } = params;
+    inclStudyFund, inclPension, duesRate,
+    contractType, hasMutual2310 } = params;
 
   const cfg = YEAR_CFG[year] || YEAR_CFG['2025'];
   const sen = (s=>{
@@ -197,15 +199,16 @@ function calcAll(params) {
   const base165 = r2(grossFixed);
   const code4150 = r2(base165*cfg.rate4150);
   const code4854 = r2((b4425||0)*cfg.rate4150);
-  const red4970 = 0;
+  const red4970 = r2(amt4970||0);
+  const c2666 = r2(amt2666||0);
   const base164 = r2(base165-code4150-code4854-red4970);
-  const base166 = r2(workTotal+(b4425||0)+(b5288||0));
+  const base166 = r2(workTotal+(b4425||0)+(b5288||0)+c2666);
   const base167 = expTotal;
 
   // H11 (protected = 0750+1034+1492+1493+1700 — not 0560, not 0700)
   const protGross = r2(exp0750+exp1034+exp1492+exp1493+exp1700);
   const protTax = protGross, protNi = protGross;
-  const miscNoH11 = r2((b4425||0)+(b5288||0)+maonotPay-code4112()-code4150-code4854);
+  const miscNoH11 = r2((b4425||0)+(b5288||0)+c2666+maonotPay-code4112()-code4150-code4854);
   function code4112() { return r2(workTotal*cfg.rate4150); }
   const c4112 = code4112();
   const grossNoH11 = r2(grossFixed+workTotal+expTotal+miscNoH11);
@@ -220,17 +223,21 @@ function calcAll(params) {
   const niBase = r2(Math.min(cfg.niCeil, gross));
   const incomeTax = calcTax(taxBase, pts, cfg);
   const ni = calcNI(niBase, cfg);
-  const pensionDed = r2(base165*.07);
-  const studyFundDed = r2(base164*.025);
-  const code2200 = r2(base165*.02);
-  const code5 = r2(base167*.05);
-  const code7 = r2(base166*.07);
-  const code25 = r2(base164*.025);
-  const duesBase = r2(Math.min(DUES_CAP,gross));
+  // Deductions — split by contractType
+  const pensionDed = r2(base165*.07);       // funded only
+  const studyFundDed = r2(base164*.025);     // funded only
+  const code2200 = r2(base165*.02);          // budgetary: 2% pension
+  const code5 = r2(base167*.05);             // budgetary: 5% expenses fund
+  const code7 = r2(base166*.07);             // budgetary: 7% work fund
+  const code25 = r2(base164*.025);           // budgetary: 2.5% study fund
+  const duesBase = r2(Math.min(DUES_CAP, grossNoH11)); // dues base: gross without H11 gross-up
   const dues = r2(duesBase*dr);
-  const mutual2310 = 21.30;
+  const mutual2310 = hasMutual2310 ? 21.30 : 0;
   const vaad7546 = r2(base165*.004);
-  const totalDed = r2(incomeTax+ni+pensionDed+studyFundDed+code2200+code5+code7+code25+dues+mutual2310+vaad7546);
+  const isBudgetary = (contractType || 'budgetary') === 'budgetary';
+  const totalDed = isBudgetary
+    ? r2(incomeTax+ni+code2200+code5+code7+code25+dues+mutual2310+vaad7546)
+    : r2(incomeTax+ni+pensionDed+studyFundDed+dues+mutual2310+vaad7546);
   const net = r2(gross-totalDed);
 
   // Economic value
@@ -257,9 +264,10 @@ function calcAll(params) {
   return {v0002,v0003,base,c4983,c0647,c4550,c4544,c4934,c4994,c5401,c5402,c5524,c5533,c1699,minBase,grossFixed,hourly,
     w1100,w1125,w1150,oncallPay,w4322,workTotal,
     exp0560,exp0700,exp0750,exp1034,exp1492,exp1493,exp1700,expTotal,
-    maonotPay,maonotCount,under5,b4425:0,b5288:b5288||0,
+    maonotPay,maonotCount,under5,b4425:b4425||0,b5288:b5288||0,c2666,
     base165,base166,base167,base164,h11,protGross,code4150,code4854,c4112,code2200,
     incomeTax,ni,pensionDed,studyFundDed,code5,code7,code25,dues,mutual2310,vaad7546,
+    duesBase,isBudgetary,
     totalDed,net,gross,pts,recD,recPay,empPension,empStudy,insRefund,regRefund,econVal,
     jubileeMonthly,
     miluimPoints:miluimPts(miluimDays||0)
@@ -406,9 +414,23 @@ function App() {
   const [inc0647, setInc0647]     = useState(true);
   const [year, setYear]           = useState('2025');
 
+  // Contract type
+  const [contractType, setContractType] = useState('budgetary'); // 'budgetary' | 'funded'
+
   // Bonuses (checkbox style)
   const [hasB5288, setHasB5288]   = useState(false);
   const b5288 = hasB5288 ? 3000 : 0;
+
+  // Additional components
+  const [amt1492, setAmt1492]     = useState(0);
+  const [amt1493, setAmt1493]     = useState(0);
+  const [days1700, setDays1700]   = useState(0);
+  const [b4425, setB4425]         = useState(0);
+  const [amt2666, setAmt2666]     = useState(0);
+  const [amt4970, setAmt4970]     = useState(0);
+
+  // Mutual 2310 — ביטוח הדדי
+  const [hasMutual2310, setHasMutual2310] = useState(true);
 
   // רכב שירות (ללא/א/ב/ג/ד) — קובע 0700+0750+1034
   const [carLevel, setCarLevel]   = useState('C');
@@ -458,16 +480,18 @@ function App() {
     gradeKey, vatek, mgmtUnits, inc0647, year,
     carLevel,
     u0700: carVals.u0700, u0750: carVals.u0750, q1034: carVals.q1034,
-    amt1492:0, amt1493:0, days1700:0, econRate:21.10,
+    amt1492, amt1493, days1700, econRate:21.10,
     travel,
     ot100, ot125, ot150, oncall, diff4322,
-    b4425:0, b5288,
+    b4425, b5288,
+    amt2666, amt4970,
     gender, childrenAges, hasDegree, miluimDays, recoveryYrs,
     inclMaonot, partnerMaonot,
     inclRec, inclCloth, inclGifts, inclCibus, inclPhone,
     inclInsRefund: inclIns, inclRegRefund: inclReg,
     insuranceCost, vehicleRegFee,
     inclStudyFund: inclStudy, inclPension, duesRate,
+    contractType, hasMutual2310,
   };
 
   const R = useMemo(()=>calcAll(params), [JSON.stringify(params)]);
@@ -538,6 +562,19 @@ function App() {
             <div className="grid grid-cols-2 gap-2">
               {['2025','2026'].map(y=>(
                 <button key={y} onClick={()=>setYear(y)} className={`py-2.5 rounded-xl border-2 text-sm font-bold transition-all ${year===y?`bg-gradient-to-br ${ACCENT} text-white border-transparent shadow`:'bg-slate-50 text-slate-700 border-slate-200 hover:border-blue-300'}`}>{y}</button>
+              ))}
+            </div>
+          </div>
+
+          <div className="mb-4">
+            <label className="text-sm font-semibold text-slate-700 mb-2 block">סוג פנסיה</label>
+            <div className="grid grid-cols-2 gap-2">
+              {[{v:'budgetary',l:'תקציבית',sub:'2200+5%+7%+2.5%'},{v:'funded',l:'צוברת',sub:'7%+2.5% גנרי'}].map(ct=>(
+                <button key={ct.v} onClick={()=>setContractType(ct.v)}
+                  className={`p-2.5 rounded-xl border-2 text-center transition-all ${contractType===ct.v?'bg-gradient-to-br from-emerald-500 to-teal-600 text-white border-transparent shadow':'bg-slate-50 text-slate-700 border-slate-200 hover:border-emerald-300'}`}>
+                  <div className={`text-sm font-bold ${contractType===ct.v?'text-white':'text-slate-800'}`}>{ct.l}</div>
+                  <div className={`text-xs mt-0.5 ${contractType===ct.v?'opacity-80':'text-slate-500'}`}>{ct.sub}</div>
+                </button>
               ))}
             </div>
           </div>
@@ -639,14 +676,15 @@ function App() {
               {oncallEl===true&&(
                 <>
                   <p className="text-xs text-slate-500 mb-2">כוננות = שעה אחת × {fmtF(R.hourly)} ₪ = <strong className="text-violet-700">{fmtF(R.hourly)} ₪</strong></p>
-                  <div className="flex items-center gap-3 mb-2">
-                    <input type="range" min="0" max="16" step="0.5" value={oncall} onChange={e=>setOncall(Number(e.target.value))}
-                      className="flex-1 h-3 rounded-full appearance-none cursor-pointer" style={sliderStyle(oncall,16,'#8b5cf6')}/>
-                    <span className="w-14 text-center font-mono bg-gradient-to-br from-violet-500 to-purple-600 text-white py-2 px-2 rounded-xl font-bold text-xl shadow">{oncall % 1 === 0 ? oncall : oncall.toFixed(1)}</span>
+                  <div className="mb-2">
+                    <label className="text-xs text-slate-500 mb-1 block">מספר כוננויות (ניתן להזין עם 2 ספרות אחרי הנקודה)</label>
+                    <input type="number" min="0" step="0.01" value={oncall}
+                      onChange={e=>setOncall(Number(e.target.value))}
+                      placeholder="0.00"
+                      className="w-full border-2 border-violet-300 rounded-xl py-2.5 px-4 font-bold text-lg text-center focus:ring-2 focus:ring-violet-500 bg-violet-50"/>
                   </div>
-                  <div className="flex justify-between text-xs text-slate-400 px-1 mb-2"><span>0</span><span>4</span><span>8</span><span>12</span><span>16</span></div>
                   {oncall>0&&<div className="bg-violet-50 border border-violet-200 rounded-xl p-2.5 text-sm flex justify-between font-semibold">
-                    <span>{oncall % 1 === 0 ? oncall : oncall.toFixed(1)} כוננויות × {fmtF(R.hourly)} ₪</span><span className="text-violet-700">+{fmt(R.oncallPay)} ₪</span>
+                    <span>{Number(oncall).toFixed(2)} כוננויות × {fmtF(R.hourly)} ₪</span><span className="text-violet-700">+{fmt(R.oncallPay)} ₪</span>
                   </div>}
                 </>
               )}
@@ -658,6 +696,47 @@ function App() {
             <input type="number" min="0" value={diff4322} onChange={e=>setDiff4322(Number(e.target.value))}
               className="w-full border-2 border-slate-200 rounded-xl py-2.5 px-4 font-semibold focus:ring-2 focus:ring-blue-400"/>
           </div>
+        </Card>
+
+        {/* ── רכיבים נוספים ── */}
+        <Card className="p-5">
+          <SectionTitle icon={Ico.Coin} title="רכיבים נוספים" subtitle="החזרי הוצאות מיוחדים, פיצויים וניכויים"/>
+          <div className="grid grid-cols-2 gap-3 mb-3">
+            {[
+              {id:'amt1492', label:'1492 החזרי הוצאות א', val:amt1492, set:setAmt1492, clr:'blue'},
+              {id:'amt1493', label:'1493 החזרי הוצאות ב', val:amt1493, set:setAmt1493, clr:'blue'},
+              {id:'b4425',   label:'4425 מענק יובל',      val:b4425,   set:setB4425,   clr:'amber'},
+              {id:'amt2666', label:'2666 גמול מיוחד',     val:amt2666, set:setAmt2666, clr:'violet'},
+            ].map(f=>(
+              <div key={f.id}>
+                <label className="text-xs font-semibold text-slate-600 mb-1 block">{f.label}</label>
+                <input type="number" min="0" value={f.val} onChange={e=>f.set(Number(e.target.value))}
+                  className={`w-full border-2 border-${f.clr}-200 rounded-xl py-2 px-3 text-center font-bold focus:ring-2 focus:ring-${f.clr}-400 bg-${f.clr}-50`}/>
+              </div>
+            ))}
+          </div>
+          <div className="grid grid-cols-2 gap-3 mb-3">
+            <div>
+              <label className="text-xs font-semibold text-slate-600 mb-1 block">1700 ימי עבודה מיוחדים</label>
+              <input type="number" min="0" step="0.5" value={days1700} onChange={e=>setDays1700(Number(e.target.value))}
+                className="w-full border-2 border-emerald-200 rounded-xl py-2 px-3 text-center font-bold focus:ring-2 focus:ring-emerald-400 bg-emerald-50"/>
+              {days1700>0&&<div className="text-xs text-emerald-600 mt-1 text-center">{days1700} ימים × 21.10 ₪ = {r2(days1700*21.10).toLocaleString('he-IL')} ₪</div>}
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-slate-600 mb-1 block">4970 הפחתה מ-164</label>
+              <input type="number" min="0" value={amt4970} onChange={e=>setAmt4970(Number(e.target.value))}
+                className="w-full border-2 border-red-200 rounded-xl py-2 px-3 text-center font-bold focus:ring-2 focus:ring-red-400 bg-red-50"/>
+              {amt4970>0&&<div className="text-xs text-red-600 mt-1 text-center">מפחית בסיס 164 ב-{amt4970.toLocaleString('he-IL')} ₪</div>}
+            </div>
+          </div>
+          {/* Mutual 2310 checkbox */}
+          <CheckRow
+            label="2310 ביטוח הדדי — 21.30 ₪"
+            sub="דמי ביטוח הדדי חודשיים"
+            on={hasMutual2310}
+            onToggle={()=>setHasMutual2310(!hasMutual2310)}
+            badge={hasMutual2310?'21.30 ₪':null}
+          />
         </Card>
 
         {/* ── רכב ונסיעות ── */}
@@ -732,6 +811,9 @@ function App() {
                 {label:'0750 הוצ. קבועות', val:R.exp0750, clr:'text-amber-800'},
                 {label:'1034 משתנות', val:R.exp1034, clr:'text-amber-800'},
               ]:[]),
+              ...(R.exp1492>0?[{label:'1492 החזר הוצאות א׳', val:R.exp1492, clr:'text-violet-800'}]:[]),
+              ...(R.exp1493>0?[{label:'1493 החזר הוצאות ב׳', val:R.exp1493, clr:'text-violet-800'}]:[]),
+              ...(R.exp1700>0?[{label:'1700 ימי עבודה מיוחדים', val:R.exp1700, clr:'text-emerald-800'}]:[]),
             ].map(r=>(
               <div key={r.label} className="flex justify-between items-center px-3 py-1.5 border-b border-slate-100 last:border-0 text-sm">
                 <span className="text-slate-600">{r.label}</span>
@@ -839,13 +921,18 @@ function App() {
             <div className="space-y-0.5">
               <ResultRow label="מס הכנסה" value={R.incomeTax} isNeg sub={`לאחר ${R.pts.toFixed(2)} נק׳ (${fmt(R.pts*242)} ₪ זיכוי)`}/>
               <ResultRow label="ביטוח לאומי + בריאות" value={R.ni} isNeg/>
-              <ResultRow label="פנסיה עובד (7%)" value={R.pensionDed} isNeg sub={`מ-${fmt(R.base165)} ₪ (165)`}/>
-              <ResultRow label="קה״ש עובד (2.5%)" value={R.studyFundDed} isNeg sub={`מ-${fmt(R.base164)} ₪ (164)`}/>
-              <ResultRow label="קציבית 2200 (2%)" value={R.code2200} isNeg/>
-              <ResultRow label="קופות 5%/7%" value={r2(R.code5+R.code7)} isNeg sub={`167=${fmt(R.base167)}, 166=${fmt(R.base166)}`}/>
-              {R.dues>0&&<ResultRow label="דמי חבר בהסתדרות" value={R.dues} isNeg/>}
-              <ResultRow label="ביטוח הדדי 2310" value={R.mutual2310} isNeg/>
-              <ResultRow label="דמי וועד 7546 (0.4%)" value={R.vaad7546} isNeg/>
+              {R.isBudgetary ? (<>
+                <ResultRow label="2200 קציבית (2% מ-165)" value={R.code2200} isNeg sub={`מ-${fmt(R.base165)} ₪`}/>
+                <ResultRow label="6292 קופה 5% (הוצאות 167)" value={R.code5} isNeg sub={`מ-${fmt(R.base167)} ₪`}/>
+                <ResultRow label="6B22 קופה 7% (עבודה 166)" value={R.code7} isNeg sub={`מ-${fmt(R.base166)} ₪`}/>
+                <ResultRow label="6T22 קופ גמל 2.5% (164)" value={R.code25} isNeg sub={`מ-${fmt(R.base164)} ₪`}/>
+              </>) : (<>
+                <ResultRow label="פנסיה עובד (7% מ-165)" value={R.pensionDed} isNeg sub={`מ-${fmt(R.base165)} ₪`}/>
+                <ResultRow label="קה״ש עובד (2.5% מ-164)" value={R.studyFundDed} isNeg sub={`מ-${fmt(R.base164)} ₪`}/>
+              </>)}
+              {R.dues>0&&<ResultRow label={`דמי חבר (${fmt(R.duesBase)} ₪ בסיס)`} value={R.dues} isNeg/>}
+              {R.mutual2310>0&&<ResultRow label="2310 ביטוח הדדי" value={R.mutual2310} isNeg/>}
+              <ResultRow label="7546 דמי וועד (0.4%)" value={R.vaad7546} isNeg/>
               <div className="pt-2 mt-2 border-t-2 border-red-300">
                 <ResultRow label='סה״כ ניכויים' value={R.totalDed} isNeg highlight/>
               </div>
@@ -987,8 +1074,8 @@ function App() {
             {[
               {label:'נטו שנתי',val:R.net*12,clr:'text-violet-700',bg:'border-violet-200'},
               {label:'שווי כלכלי שנתי',val:R.econVal*12,clr:'text-emerald-600',bg:'border-emerald-200'},
-              {label:'חיסכון שנתי פנסיה',val:(R.pensionDed+R.empPension)*12,clr:'text-blue-600',bg:'border-blue-200',sub:'עובד + מעסיק'},
-              {label:'חיסכון שנתי קה״ש',val:(R.studyFundDed+R.empStudy)*12,clr:'text-indigo-600',bg:'border-indigo-200',sub:'עובד + מעסיק'},
+              {label:'חיסכון שנתי פנסיה',val:(R.isBudgetary?(R.code2200+R.code7):R.pensionDed+R.empPension)*12,clr:'text-blue-600',bg:'border-blue-200',sub:R.isBudgetary?'2200+7% (עובד)':'עובד + מעסיק'},
+              {label:'חיסכון שנתי קה״ש',val:(R.isBudgetary?R.code25:R.studyFundDed+R.empStudy)*12,clr:'text-indigo-600',bg:'border-indigo-200',sub:R.isBudgetary?'2.5% עובד':'עובד + מעסיק'},
             ].map((s,i)=>(
               <div key={i} className={`bg-white rounded-xl p-4 border-2 ${s.bg}`}>
                 <div className="text-sm text-slate-600 mb-1">{s.label}</div>
@@ -1030,7 +1117,7 @@ function App() {
     </div>{/* /max-w */}
 
     {/* ── PAYSLIP MODAL ── */}
-    {showPayslip && <PayslipModal R={R} vatek={vatek} gradeKey={gradeKey} onClose={()=>setShowPayslip(false)}/>}
+    {showPayslip && <PayslipModal R={R} vatek={vatek} gradeKey={gradeKey} contractType={contractType} onClose={()=>setShowPayslip(false)}/>}
 
     {/* ── STICKY BAR ── */}
     <StickyBar R={R} ACCENT={ACCENT}/>
@@ -1039,7 +1126,8 @@ function App() {
   );
 }
 
-const PayslipModal = ({R, vatek, gradeKey, onClose}) => {
+const PayslipModal = ({R, vatek, gradeKey, contractType, onClose}) => {
+  const isBudgetary = (contractType||'budgetary') === 'budgetary';
   const now = new Date();
   const months = ["ינואר","פברואר","מרץ","אפריל","מאי","יוני","יולי","אוגוסט","ספטמבר","אוקטובר","נובמבר","דצמבר"];
   const monthStr = months[now.getMonth()] + " " + now.getFullYear();
@@ -1131,7 +1219,7 @@ const PayslipModal = ({R, vatek, gradeKey, onClose}) => {
         </div>
 
         {/* ─── TABS ─── */}
-        <PayslipTabs R={R} f={f} ff={ff} PR={PR} DR={DR} ER={ER} SH={SH} TR={TR} TD={TD} TH={TH} workTotal={workTotal} chainTotal={chainTotal}/>
+        <PayslipTabs R={R} f={f} ff={ff} PR={PR} DR={DR} ER={ER} SH={SH} TR={TR} TD={TD} TH={TH} workTotal={workTotal} chainTotal={chainTotal} isBudgetary={isBudgetary}/>
 
         {/* Footer */}
         <div className="no-print px-5 pb-5 flex gap-3 justify-center border-t border-gray-100 pt-4">
@@ -1151,7 +1239,7 @@ const PayslipModal = ({R, vatek, gradeKey, onClose}) => {
 };
 
 // Tabs component (inside modal) — פירוט תלוש + הסבר ידידותי
-const PayslipTabs = ({R, f, ff, PR, DR, ER, SH, TR, TD, TH, workTotal, chainTotal}) => {
+const PayslipTabs = ({R, f, ff, PR, DR, ER, SH, TR, TD, TH, workTotal, chainTotal, isBudgetary}) => {
   const [tab, setTab] = useState("slip");
 
   return (
@@ -1211,13 +1299,17 @@ const PayslipTabs = ({R, f, ff, PR, DR, ER, SH, TR, TD, TH, workTotal, chainTota
                 {R.exp0700>0&&<PR code="0700" name="קרן שעות רכב" qty={ff(R.exp0700/169)+" יח׳"} rate="169 ₪" total={R.exp0700}/>}
                 {R.exp0750>0&&<PR code="0750" name="הוצ. רכב קבועות" qty={ff(R.exp0750/96.75)+" יח׳"} rate="96.75 ₪" total={R.exp0750}/>}
                 {R.exp1034>0&&<PR code="1034" name="משתנות רגלי" qty={ff(R.exp1034/0.68)+" ק״מ"} rate="0.68 ₪" total={R.exp1034}/>}
+                {R.exp1492>0&&<PR code="1492" name="החזר הוצאות א׳" total={R.exp1492}/>}
+                {R.exp1493>0&&<PR code="1493" name="החזר הוצאות ב׳" total={R.exp1493}/>}
+                {R.exp1700>0&&<PR code="1700" name="ימי עבודה מיוחדים" total={R.exp1700} note={`× 21.10 ₪`}/>}
               </>}
 
-              {(R.maonotPay>0||R.b4425>0||R.b5288>0||R.h11>0)&&<>
+              {(R.maonotPay>0||R.b4425>0||R.b5288>0||R.c2666>0||R.h11>0)&&<>
                 <SH title="שונות" color="bg-purple-50"/>
                 {R.maonotPay>0&&<PR code="4349" name="תוספת מעונות" qty={R.maonotCount+" ילד/ים"} rate={MAONOT_PER_CHILD+" ₪"} total={R.maonotPay} note="ילדים עד גיל 4"/>}
                 {R.b4425>0&&<PR code="4425" name="מענק יובל" total={R.b4425}/>}
                 {R.b5288>0&&<PR code="5288" name="מענק מיוחד" total={R.b5288}/>}
+                {R.c2666>0&&<PR code="2666" name="גמול מיוחד" total={R.c2666}/>}
                 {R.h11>0&&<PR code="H11" name="גילום מס על הוצאות" total={R.h11} note="חיפוש בינארי — שומר נטו הוצאות"/>}
                 {R.code4150>0&&<PR code="4150" name="הפחתה פנסיונית" total={-R.code4150} neg note={`${(YEAR_CFG['2025'].rate4150*100).toFixed(2)}% × ${f(R.base165)} ₪`}/>}
                 {R.c4112>0&&<PR code="4112" name="הפחתה — עבודה נוספת" total={-R.c4112} neg/>}
@@ -1244,14 +1336,19 @@ const PayslipTabs = ({R, f, ff, PR, DR, ER, SH, TR, TD, TH, workTotal, chainTota
               <DR code="351/" name="ביטוח לאומי" base={f(R.gross)+" ₪"} total={r2(R.ni*0.37)}/>
               <DR code="352/" name="ביטוח בריאות" base={f(R.gross)+" ₪"} total={r2(R.ni*0.63)}/>
               <SH title="ניכויי קופות" color="bg-orange-50"/>
-              <DR code="2200" name="קציבית (פנסיה)" pct="2" base={f(R.base165)+" ₪"} total={R.code2200}/>
-              <DR code="6292" name="קופה/ביטוח 5% (הוצאות)" pct="5" base={f(R.base167)+" ₪"} total={R.code5}/>
-              <DR code="6B22" name="קופה/ביטוח 7% (עבודה)" pct="7" base={f(R.base166)+" ₪"} total={R.code7}/>
-              <DR code="6T22" name={`קופ גמל 2.5% (164)`} pct="2.5" base={f(R.base164)+" ₪"} total={R.code25}/>
+              {isBudgetary ? (<>
+                <DR code="2200" name="קציבית (פנסיה עובד)" pct="2" base={f(R.base165)+" ₪"} total={R.code2200}/>
+                <DR code="6292" name="קופה/ביטוח 5% (הוצאות)" pct="5" base={f(R.base167)+" ₪"} total={R.code5}/>
+                <DR code="6B22" name="קופה/ביטוח 7% (עבודה)" pct="7" base={f(R.base166)+" ₪"} total={R.code7}/>
+                <DR code="6T22" name="קופ גמל 2.5% (164)" pct="2.5" base={f(R.base164)+" ₪"} total={R.code25}/>
+              </>) : (<>
+                <DR code="6292" name="פנסיה עובד (7%)" pct="7" base={f(R.base165)+" ₪"} total={R.pensionDed}/>
+                <DR code="6T22" name="קה״ש עובד (2.5%)" pct="2.5" base={f(R.base164)+" ₪"} total={R.studyFundDed}/>
+              </>)}
               <SH title="ניכויים אישיים" color="bg-gray-50"/>
-              <DR code="2310" name="ביטוח הדדי" total={R.mutual2310}/>
+              {R.mutual2310>0&&<DR code="2310" name="ביטוח הדדי" total={R.mutual2310}/>}
               <DR code="7546" name="דמי וועד" pct="0.4" base={f(R.base165)+" ₪"} total={R.vaad7546}/>
-              {R.dues>0&&<DR code="767x" name="דמי חבר בהסתדרות" base={f(R.base165)+" ₪"} total={R.dues}/>}
+              {R.dues>0&&<DR code="767x" name={`דמי חבר (${f(R.duesBase)} ₪ בסיס)`} base={f(R.duesBase)+" ₪"} total={R.dues}/>}
               <TR cls="bg-red-50 border-t-2 border-red-300">
                 <TD ch="" cls="w-12"/><TD ch='סה״כ ניכויים' cls="font-black text-red-900 text-sm"/>
                 <TD ch=""/><TD ch=""/>
