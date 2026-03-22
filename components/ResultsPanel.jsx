@@ -1,5 +1,7 @@
 'use client';
 
+import LeadCard from './LeadCard';
+
 const fmt = (n) => Math.round(n).toLocaleString('he-IL');
 const fmtF = (n) => n.toFixed(2);
 
@@ -19,7 +21,7 @@ const ResultRow = ({ label, value, isNeg = false, highlight = false, subValue = 
   </div>
 );
 
-export default function ResultsPanel({ result, contract, showAnnual, setShowAnnual }) {
+export default function ResultsPanel({ result, contract, showAnnual, setShowAnnual, leadType, leadMeta }) {
   if (!result) return null;
 
   const R = result;
@@ -104,9 +106,12 @@ export default function ResultsPanel({ result, contract, showAnnual, setShowAnnu
           <div className="text-xs font-bold text-slate-500 uppercase tracking-wide px-3 mt-4 mb-1">ניכויים</div>
           <ResultRow label="מס הכנסה" value={R.incomeTax} isNeg
             subValue={`${R.points.toFixed(2)} נקודות זיכוי × 250 ₪ = ${Math.round(R.taxCreditValue).toLocaleString()} ₪`} />
+          {leadType === 'tax_refund' && <LeadCard offerType="tax_refund" leadMeta={leadMeta} />}
           <ResultRow label="ביטוח לאומי + בריאות" value={R.socialSecurity} isNeg />
           <ResultRow label={`פנסיה עובד (${(contract.pensionEmployee * 100).toFixed(0)}%)`} value={R.pensionDed} isNeg />
+          {leadType === 'pension_review' && <LeadCard offerType="pension_review" leadMeta={leadMeta} />}
           <ResultRow label={`קרן השתלמות (${(contract.studyFundEmployee * 100).toFixed(1)}%)`} value={R.studyFundDed} isNeg />
+          {leadType === 'study_fund' && <LeadCard offerType="study_fund" leadMeta={leadMeta} />}
           <ResultRow label="דמי ארגון" value={R.unionDues} isNeg />
 
           <div className="border-t border-slate-200 mt-2 pt-2">
