@@ -58,6 +58,15 @@ import ResultsPanel from '../components/ResultsPanel';
 import PayslipModal from '../components/PayslipModal';
 import StickyContactBar from '../components/StickyContactBar';
 
+// ── Lead recommendation ──
+function getLeadRecommendation(result, miluimDays) {
+  if (!result) return null;
+  if (result.incomeTax > 0 || miluimDays > 0 || result.localityBenefit > 0) return 'tax_refund';
+  if (result.studyFundDed > 0 || result.studyFundEmployer > 0) return 'study_fund';
+  if (result.pensionDed > 500) return 'pension_review';
+  return null;
+}
+
 // ── Icons ──
 const Ico = {
   Calc: ({ c }) => <svg className={c} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>,
@@ -840,6 +849,21 @@ export default function SalaryCalculatorPage() {
               contract={contract}
               showAnnual={showAnnual}
               setShowAnnual={setShowAnnual}
+              leadType={getLeadRecommendation(result, miluimDays)}
+              leadMeta={result ? {
+                contractId,
+                contractName: contract?.name,
+                gradeId,
+                gradeLabel,
+                baseSalary: result.baseSalary,
+                totalGross: result.totalGross,
+                incomeTax: result.incomeTax,
+                netSalary: result.netSalary,
+                pensionDed: result.pensionDed,
+                studyFundDed: result.studyFundDed,
+                miluimDays,
+                localityName,
+              } : null}
             />
 
             {/* שווי כלכלי */}
