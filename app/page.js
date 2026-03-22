@@ -691,7 +691,7 @@ export default function SalaryCalculatorPage() {
 
               {/* Miluim */}
               <div className="mb-4">
-                <label className="text-sm font-semibold text-slate-700 mb-1 block">ימי מילואים בשנה (2026)</label>
+                <label className="text-sm font-semibold text-slate-700 mb-1 block">ימי מילואים בשנה (2025)</label>
                 <p className="text-xs text-slate-500 mb-2">נקודות זיכוי מיוחדות ללוחמי מילואים</p>
                 <div className="flex items-center gap-3 mb-2">
                   <input type="range" min="0" max="120" step="5" value={miluimDays}
