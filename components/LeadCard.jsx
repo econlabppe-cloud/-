@@ -32,8 +32,6 @@ export default function LeadCard({ offerType, leadMeta }) {
   const [submitting, setSubmitting] = useState(false);
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
-  const [consent, setConsent] = useState(false);
-
   const copy = COPY[offerType];
   const netSalaryBucket = Math.round((leadMeta?.netSalary || 0) / 1000) * 1000;
   const gaParams = { offer_type: offerType, contract_id: leadMeta?.contractId, net_salary_bucket: netSalaryBucket };
@@ -54,7 +52,7 @@ export default function LeadCard({ offerType, leadMeta }) {
 
   async function handleSubmit(e) {
     e.preventDefault();
-    if (!consent || submitting) return;
+    if (submitting) return;
     setSubmitting(true);
 
     const payload = {
@@ -71,6 +69,20 @@ export default function LeadCard({ offerType, leadMeta }) {
       studyFundDed: leadMeta.studyFundDed,
       miluimDays: leadMeta.miluimDays,
       localityName: leadMeta.localityName,
+      gender: leadMeta.gender,
+      hasDegree: leadMeta.hasDegree,
+      partnerWorks: leadMeta.partnerWorks,
+      childrenAges: leadMeta.childrenAges,
+      inclMaonot: leadMeta.inclMaonot,
+      overtimeHours: leadMeta.overtimeHours,
+      travelAllowance: leadMeta.travelAllowance,
+      recoveryYears: leadMeta.recoveryYears,
+      carType: leadMeta.carType,
+      companyCar: leadMeta.companyCar,
+      companyCarGroup: leadMeta.companyCarGroup,
+      oncallCount: leadMeta.oncallCount,
+      premiumHours: leadMeta.premiumHours,
+      premiumPct: leadMeta.premiumPct,
       timestamp: new Date().toISOString(),
       source: 'salary_simulator',
     };
@@ -142,18 +154,12 @@ export default function LeadCard({ offerType, leadMeta }) {
                   onChange={e => setPhone(e.target.value)}
                   className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm text-right focus:outline-none focus:border-violet-400"
                 />
-                <label className="flex items-start gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={consent}
-                    onChange={e => setConsent(e.target.checked)}
-                    className="mt-0.5 w-4 h-4 text-violet-600 rounded flex-shrink-0"
-                  />
-                  <span className="text-xs text-slate-500 text-right">אני מאשר/ת שיחזרו אליי לצורך הבדיקה</span>
-                </label>
+                <p className="text-xs text-slate-400 text-right">
+                  בלחיצה על שלח אתה מאשר/ת ליצור איתך קשר
+                </p>
                 <button
                   type="submit"
-                  disabled={!consent || submitting}
+                  disabled={submitting}
                   className="w-full bg-violet-600 hover:bg-violet-700 disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold py-2 rounded-lg text-sm transition-colors"
                 >
                   {submitting ? 'שולח...' : 'שלח'}

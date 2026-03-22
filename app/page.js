@@ -863,6 +863,20 @@ export default function SalaryCalculatorPage() {
                 studyFundDed: result.studyFundDed,
                 miluimDays,
                 localityName,
+                gender,
+                hasDegree,
+                partnerWorks,
+                childrenAges,
+                inclMaonot,
+                overtimeHours,
+                travelAllowance,
+                recoveryYears,
+                carType,
+                companyCar,
+                companyCarGroup,
+                oncallCount,
+                premiumHours,
+                premiumPct,
               } : null}
             />
 
