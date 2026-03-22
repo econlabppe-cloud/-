@@ -2,7 +2,7 @@
 // SERVER ONLY
 
 import { NextResponse } from 'next/server';
-import { CONTRACTS, CAR_PACKAGES } from '../../../lib/contracts.js';
+import { CONTRACTS, CAR_PACKAGES, LOCALITY_GROUPS, LOCALITY_MAP } from '../../../lib/contracts.js';
 import { calcAll } from '../../../lib/calcAll.js';
 
 export const dynamic = 'force-dynamic';
@@ -48,6 +48,7 @@ export async function POST(request) {
     inclMaonot = true,
     inclCibus = true,
     inclPhone = true,
+    localityName = '',
   } = body;
 
   // Validate contractId
@@ -101,22 +102,37 @@ export async function POST(request) {
     inclPhone: Boolean(inclPhone),
     gradeHourlyRate: grade.hourlyRate || (grade.salary / 173.33),
     hasOvertimeEntitlement: true,
+    localityGroupData: (localityName && LOCALITY_MAP[localityName])
+      ? LOCALITY_GROUPS[String(LOCALITY_MAP[localityName])]
+      : null,
   };
 
   const result = calcAll(grade.salary, contract, params);
 
-  // Also calculate next grade for comparison
+  // Calculate next grade — preserving letter suffix (39ב → 40ב, not 40)
   const gradeIdx = contract.grades.findIndex(g => g.id === grade.id);
   let nextGradeResult = null;
-  if (gradeIdx >= 0 && gradeIdx < contract.grades.length - 1) {
-    const nextGrade = contract.grades[gradeIdx + 1];
-    nextGradeResult = calcAll(nextGrade.salary, contract, params);
+  let nextGradeLabel = null;
+  if (gradeIdx >= 0) {
+    const hebrewLetters = 'אבגדהוזחטיכלמנסעפצקרשת';
+    const curLabel = grade.label;
+    const curSuffix = hebrewLetters.includes(curLabel.slice(-1)) ? curLabel.slice(-1) : '';
+    for (let i = gradeIdx + 1; i < contract.grades.length; i++) {
+      const g = contract.grades[i];
+      const gSuffix = hebrewLetters.includes(g.label.slice(-1)) ? g.label.slice(-1) : '';
+      if (gSuffix === curSuffix) {
+        nextGradeResult = calcAll(g.salary, contract, params);
+        nextGradeLabel = g.label;
+        break;
+      }
+    }
   }
 
   return NextResponse.json(
     {
       result,
       nextGradeResult,
+      nextGradeLabel,
       gradeLabel: grade.label,
       gradeSalary: grade.salary,
     },

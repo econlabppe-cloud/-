@@ -146,6 +146,9 @@ export default function SalaryCalculatorPage() {
   const [premiumPct, setPremPct] = useState(25);
   const [recoveryYears, setRecYears] = useState(0);
   const [inclMaonot, setInclMaonot] = useState(true);
+  const [localityName, setLocalityName] = useState('');
+  const [localitySearch, setLocalitySearch] = useState('');
+  const [inclLocality, setInclLocality] = useState(false);
 
   const [toggles, setToggles] = useState({
     includeInsuranceRefund: true,
@@ -208,6 +211,7 @@ export default function SalaryCalculatorPage() {
           companyCar, companyCarGroup,
           oncallCount, premiumHours, premiumPct,
           recoveryYears, inclMaonot,
+          localityName: inclLocality ? localityName : '',
           ...toggles,
         };
         const res = await fetch('/api/calculate', {
@@ -233,6 +237,7 @@ export default function SalaryCalculatorPage() {
     companyCar, companyCarGroup,
     oncallCount, premiumHours, premiumPct,
     recoveryYears, inclMaonot, toggles, meta,
+    inclLocality, localityName,
   ]);
 
   useEffect(() => { calculate(); }, [calculate]);
@@ -738,6 +743,12 @@ export default function SalaryCalculatorPage() {
                 toggles={toggles}
                 setToggles={setToggles}
                 hasCar={cp.isCar}
+                inclLocality={inclLocality}
+                setInclLocality={setInclLocality}
+                localityName={localityName}
+                setLocalityName={setLocalityName}
+                localitySearch={localitySearch}
+                setLocalitySearch={setLocalitySearch}
               />
               <div className="mt-4 p-4 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl text-white">
                 <div className="flex items-center justify-between">
