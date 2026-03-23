@@ -256,6 +256,12 @@ export default function SalaryCalculatorPage() {
     }
   }, [contractId, meta]);
 
+  function trackCalc(eventName, params) {
+    if (typeof window !== 'undefined' && typeof window.gtag === 'function') {
+      window.gtag('event', eventName, params);
+    }
+  }
+
   // Calculate — debounced 300ms
   const calculate = useCallback(() => {
     if (!gradeId || !meta) return;
@@ -284,6 +290,22 @@ export default function SalaryCalculatorPage() {
         setResult(data.result);
         setNextResult(data.nextGradeResult);
         setGradeLabel(data.gradeLabel || gradeId);
+        trackCalc('simulator_calculate', {
+          contract_id: contractId,
+          grade_id: gradeId,
+          grade_label: data.gradeLabel || gradeId,
+          gender,
+          has_degree: hasDegree,
+          partner_works: partnerWorks,
+          children_count: childrenAges.reduce((s, c) => s + c.count, 0),
+          net_salary_bucket: Math.round((data.result?.netSalary || 0) / 1000) * 1000,
+          overtime_hours: overtimeHours,
+          has_company_car: companyCar,
+          locality: inclLocality ? localityName : '',
+          miluim_days: miluimDays,
+          recovery_years: recoveryYears,
+          travel_allowance: travelAllowance,
+        });
       } catch (err) {
         console.error(err);
       } finally {
