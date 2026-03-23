@@ -140,6 +140,7 @@ export default function ResultsPanel({ result, contract, showAnnual, setShowAnnu
               <div className="text-base font-bold text-orange-800">{fmt(R.pensionableSalary * 0.0833)} ₪</div>
             </div>
           </div>
+          {R.pensionEmployer > 0 && <LeadCard offerType="pension_review" leadMeta={leadMeta} />}
         </div>
       </div>
 
