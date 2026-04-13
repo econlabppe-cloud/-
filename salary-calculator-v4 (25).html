@@ -2229,12 +2229,12 @@ const MONTHLY_HOURS = 173.33;
 function calcIncomeTax(monthly) {
   // מדרגות מס הכנסה 2025 (רשות המסים)
   const brackets = [
-    {up: 7290,  rate: 0.10},
-    {up: 10430, rate: 0.14},
-    {up: 16680, rate: 0.20},
-    {up: 23920, rate: 0.31},
-    {up: 49680, rate: 0.35},
-    {up: 64080, rate: 0.47},
+    {up: 7010,  rate: 0.10},
+    {up: 10060, rate: 0.14},
+    {up: 19000, rate: 0.20},
+    {up: 25100, rate: 0.31},
+    {up: 46690, rate: 0.35},
+    {up: 60317, rate: 0.47},
     {up: Infinity, rate: 0.50},
   ];
   let tax = 0, prev = 0;
@@ -2368,7 +2368,7 @@ function calcAll(baseSalary, contract, params) {
 
   const clothing = 206; // ביגוד — מעודכן
   const gifts = 100;
-  const cibus = 22 * 20;  // סיבוס — 22 ₪ × 20 ימי עבודה
+  const cibus = 30 * 20;  // סיבוס — 30 ₪ × 20 ימי עבודה
   const phone = 130;      // קו + מכשיר סלולר
   const insuranceRefundMonthly = (cp.isCar && !companyCar) ? Math.min(insuranceCost, 7000) / 12 : 0;
   const regFeeRefundMonthly = (cp.isCar && !companyCar) ? Math.min(vehicleRegFee || 0, 2326) / 12 : 0;
@@ -3627,7 +3627,7 @@ function SalaryCalculator() {
 
                 <BenefitToggle label="דמי ביגוד (206 ₪/חודש)" sub="עדכון 2024" value={R.clothing} checked={inclCloth} onChange={setInclCloth} />
                 <BenefitToggle label="מתנות לחגים" value={R.gifts} checked={inclGifts} onChange={setInclGifts} />
-                <BenefitToggle label="סיבוס (22 ₪ × 20 ימים)" sub="ארוחות בעבודה — שווי חודשי" value={R.cibus} checked={inclCibus} onChange={setInclCibus} icon={Ico.Coin} />
+                <BenefitToggle label="סיבוס (30 ₪ × 20 ימים)" sub="ארוחות בעבודה — שווי חודשי" value={R.cibus} checked={inclCibus} onChange={setInclCibus} icon={Ico.Coin} />
                 <BenefitToggle label="קו + מכשיר סלולר" sub="ערך חודשי משוערך" value={R.phone} checked={inclPhone} onChange={setInclPhone} icon={Ico.Card} />
 
                 <div className="mt-4 p-4 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl text-white">
