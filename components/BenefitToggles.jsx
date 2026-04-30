@@ -87,7 +87,7 @@ export default function BenefitToggles({ result, toggles, setToggles, hasCar }) 
 
       <BenefitToggle
         label="סיבוס / ארוחות"
-        sub="22 ₪ × 20 ימי עבודה"
+        sub="30 ₪ × 20 ימי עבודה"
         value={cibus}
         checked={toggles.inclCibus}
         onChange={v => setToggles(prev => ({ ...prev, inclCibus: v }))}
