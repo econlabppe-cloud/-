@@ -105,6 +105,7 @@ export async function POST(request) {
     localityGroupData: (localityName && LOCALITY_MAP[localityName])
       ? LOCALITY_GROUPS[String(LOCALITY_MAP[localityName])]
       : null,
+    mealAllowance: grade.mealAllowance || 0,
   };
 
   const result = calcAll(grade.salary, contract, params);
