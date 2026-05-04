@@ -201,6 +201,7 @@ export default function SalaryCalculatorPage() {
   const [miluimDays, setMiluim] = useState(0);
   const [companyCar, setCompanyCar] = useState(false);
   const [companyCarGroup, setCompanyCarGroup] = useState(3);
+  const [carEcoType, setCarEcoType] = useState('none');
   const [oncallCount, setOncall] = useState(0);
   const [premiumHours, setPremHours] = useState(0);
   const [premiumPct, setPremPct] = useState(25);
@@ -274,7 +275,7 @@ export default function SalaryCalculatorPage() {
           overtimeHours, carType, childrenAges,
           gender, hasDegree, partnerWorks, miluimDays,
           insuranceCost, vehicleRegFee, travelAllowance,
-          companyCar, companyCarGroup,
+          companyCar, companyCarGroup, carEcoType,
           oncallCount, premiumHours, premiumPct,
           recoveryYears, inclMaonot,
           localityName: inclLocality ? localityName : '',
@@ -316,7 +317,7 @@ export default function SalaryCalculatorPage() {
     contractId, gradeId, overtimeHours, carType, childrenAges,
     gender, hasDegree, partnerWorks, miluimDays,
     insuranceCost, vehicleRegFee, travelAllowance,
-    companyCar, companyCarGroup,
+    companyCar, companyCarGroup, carEcoType,
     oncallCount, premiumHours, premiumPct,
     recoveryYears, inclMaonot, toggles, meta,
     inclLocality, localityName,
@@ -657,9 +658,31 @@ export default function SalaryCalculatorPage() {
                         </button>
                       ))}
                     </div>
+                    <div className="mt-3">
+                      <div className="text-xs font-semibold text-slate-600 mb-2">סוג דלק (הנחת תמריץ ירוק):</div>
+                      <div className="grid grid-cols-3 gap-2">
+                        {[
+                          { key: 'none',     label: 'רגיל',     sub: 'ללא הנחה' },
+                          { key: 'hybrid',   label: 'היברידי',  sub: '−580 ₪' },
+                          { key: 'electric', label: 'חשמלי',    sub: '−1,380 ₪' },
+                        ].map(opt => (
+                          <button key={opt.key} onClick={() => setCarEcoType(opt.key)}
+                            className={`p-2.5 rounded-xl border-2 text-center transition-all ${
+                              carEcoType === opt.key
+                                ? 'bg-gradient-to-br from-emerald-600 to-green-700 text-white border-transparent shadow-md'
+                                : 'bg-white text-slate-700 border-slate-200 hover:border-emerald-400'
+                            }`}>
+                            <div className={`text-xs font-bold ${carEcoType === opt.key ? 'text-white' : 'text-slate-800'}`}>{opt.label}</div>
+                            <div className={`text-xs mt-0.5 ${carEcoType === opt.key ? 'opacity-80' : 'text-slate-500'}`}>{opt.sub}</div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
                     {result && (
                       <div className="mt-3 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 text-xs text-amber-800">
-                        <span className="font-semibold">זקיפת הטבה: {result.companyCarImputation?.toLocaleString()} ₪/חודש</span> — נוספת לברוטו לצורך חישוב מס ובטל״א
+                        <span className="font-semibold">שווי שימוש: {result.companyCarImputationNet?.toLocaleString()} ₪/חודש</span>
+                        {result.carEcoDiscount > 0 && <span className="text-emerald-700"> (לאחר הנחה של {result.carEcoDiscount?.toLocaleString()} ₪)</span>}
+                        {' '}— ממוסה בלבד, לא חלק מהברוטו
                       </div>
                     )}
                   </div>
