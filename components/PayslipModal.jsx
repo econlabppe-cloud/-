@@ -121,8 +121,13 @@ export default function PayslipModal({ onClose, result, contract, gradeLabel, to
             {R.maonotPay > 0 && (
               <PR code="0580" name="קצובת מעונות" qty="—" rate="—" total={fmt(R.maonotPay)} />
             )}
-            {R.companyCarImputation > 0 && (
-              <PR code="1800" name="זקיפת הטבת רכב צמוד" qty="—" rate="—" total={fmt(R.companyCarImputation)} />
+            {R.mealAllowance > 0 && (
+              <PR code="0590" name="דמי כלכלה" qty="—" rate="—" total={fmt(R.mealAllowance)} />
+            )}
+            {R.companyCarImputationNet > 0 && (
+              <PR code="1800"
+                name={`זקיפת שווי שימוש ברכב${R.carEcoDiscount > 0 ? ` (הנחה ירוקה ${fmt(R.carEcoDiscount)} ₪)` : ''}`}
+                qty="—" rate="—" total={fmt(R.companyCarImputationNet)} />
             )}
           </tbody>
         </table>
@@ -130,7 +135,9 @@ export default function PayslipModal({ onClose, result, contract, gradeLabel, to
         {/* Gross total */}
         <div className="mx-4 mb-3 grid grid-cols-2 gap-2">
           <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 text-center">
-            <div className="text-xs text-blue-700 mb-1 font-bold">ברוטו לחישוב</div>
+            <div className="text-xs text-blue-700 mb-1 font-bold">
+              {R.companyCarImputationNet > 0 ? `ברוטו שכר (מס על ${fmt(R.taxableGross)} ₪)` : 'ברוטו לחישוב'}
+            </div>
             <div className="text-2xl font-black text-blue-800">{fmt(R.totalGross)} ₪</div>
           </div>
           <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-center">
