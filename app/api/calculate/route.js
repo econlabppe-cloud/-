@@ -49,6 +49,7 @@ export async function POST(request) {
     inclCibus = true,
     inclPhone = true,
     localityName = '',
+    carEcoType = 'none',
   } = body;
 
   // Validate contractId
@@ -106,6 +107,7 @@ export async function POST(request) {
       ? LOCALITY_GROUPS[String(LOCALITY_MAP[localityName])]
       : null,
     mealAllowance: grade.mealAllowance || 0,
+    carEcoType: ['hybrid','electric','none'].includes(carEcoType) ? carEcoType : 'none',
   };
 
   const result = calcAll(grade.salary, contract, params);

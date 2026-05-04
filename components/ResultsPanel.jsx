@@ -97,10 +97,20 @@ export default function ResultsPanel({ result, contract, showAnnual, setShowAnnu
           {R.premiumPay > 0 && <ResultRow label="פרמיה" value={R.premiumPay} />}
           {R.carGross > 0 && <ResultRow label="רכב ונסיעות" value={R.carGross} subValue={`קצובת נסיעה: ${R.travelAllowance} ₪`} />}
           {R.maonotPay > 0 && <ResultRow label="קצובת מעונות" value={R.maonotPay} />}
-          {R.companyCarImputation > 0 && <ResultRow label="זקיפת הטבת רכב צמוד" value={R.companyCarImputation} />}
+          {R.mealAllowance > 0 && <ResultRow label="דמי כלכלה" value={R.mealAllowance} />}
+          {R.companyCarImputationNet > 0 && (
+            <ResultRow
+              label={`שווי שימוש ברכב${R.carEcoDiscount > 0 ? ` (הנחה ירוקה)` : ''}`}
+              value={R.companyCarImputationNet}
+              subValue={R.carEcoDiscount > 0 ? `הנחה: ${R.carEcoDiscount} ₪ | מחויב במס בלבד` : 'מחויב במס בלבד'}
+            />
+          )}
 
           <div className="border-t border-slate-200 mt-2 pt-2">
-            <ResultRow label="ברוטו לחישוב" value={R.totalGross} highlight />
+            <ResultRow label="ברוטו שכר" value={R.totalGross} highlight />
+            {R.companyCarImputationNet > 0 && (
+              <ResultRow label="ברוטו לחישוב מס" value={R.taxableGross} subValue="כולל שווי שימוש ברכב" />
+            )}
           </div>
 
           <div className="text-xs font-bold text-slate-500 uppercase tracking-wide px-3 mt-4 mb-1">ניכויים</div>
