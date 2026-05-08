@@ -93,8 +93,8 @@ export default function ResultsPanel({ result, contract, showAnnual, setShowAnnu
         <div className="space-y-1">
           <div className="text-xs font-bold text-slate-500 uppercase tracking-wide px-3 mb-1">הכנסות</div>
           <ResultRow label="שכר יסוד" value={R.baseSalary} highlight info={{
-            title: 'שכר יסוד',
-            content: 'שכר הבסיס לפי דרגה בדירוג.\n\n📈 קידום דרגות: בדרך כלל עולים דרגה אחת כל שנתיים (לפי פז"מ — פיתוח זכאות מקצועית).\n\n⚡ פז"מ מקוצר: עם ביצועים טובים, ניתן לעלות דרגה כל שנה — קצב כפול. מאפשר חיסכון של שנים רבות בקידום.\n\nהשכר מחושב: שכר דרגה × 173.33 שעות חודשיות.'
+            title: 'שכר יסוד ודרגות',
+            content: 'שכר הבסיס נקבע לפי הדרגה בדירוג.\n\n📌 דרגה התחלתית\nנקבעת לפי השכלה + ניסיון מוכר קודם.\nכל שנת ניסיון מוכרת = דרגה אחת נוספת מעל מינימום הדירוג.\n\n📈 קידום שוטף (פז״מ)\nכל 2 שנות עבודה = עלייה בדרגה אחת אוטומטית.\n\n⚡ פז״מ מקוצר\nביצועים טובים → עלייה בדרגה כל שנה (פי 2). מוגבל ל-3 שנים רצופות.\n\nחישוב: שכר דרגה ÷ 173.33 = תעריף שעתי'
           }} />
           {R.overtimePay > 0 && (
             <ResultRow label="שעות נוספות" value={R.overtimePay}
