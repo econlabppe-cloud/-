@@ -116,7 +116,13 @@ export default function PayslipModal({ onClose, result, contract, gradeLabel, to
               <PR code="0230" name="פרמיה" qty="—" rate="—" total={fmt(R.premiumPay)} />
             )}
             {R.carGross > 0 && (
-              <PR code="0560" name="קצובת נסיעה + רכב שירות" qty="—" rate="—" total={fmt(R.carGross)} />
+              <PR code="0560" name="קצובת נסיעה" qty="—" rate="—" total={fmt(R.carGross)} />
+            )}
+            {R.carReimbursement > 0 && (
+              <PR code="0565" name="החזר הוצאות רכב שירות (נטו)" qty="—" rate="—" total={fmt(R.carReimbursement)} />
+            )}
+            {R.ashalPay > 0 && (
+              <PR code="0570" name='אש"ל (ימי עבודה מעל 10 שעות)' qty="—" rate="—" total={fmt(R.ashalPay)} />
             )}
             {R.maonotPay > 0 && (
               <PR code="0580" name="קצובת מעונות" qty="—" rate="—" total={fmt(R.maonotPay)} />

@@ -100,9 +100,10 @@ const SectionTitle = ({ icon: Icon, title, subtitle }) => (
 
 const CAR_PACKAGES_META = {
   none:   { label: 'ללא רכב', isCar: false, value: 0 },
-  level2: { label: "רכב שירות - רמה ב'", isCar: true, value: 1022 },
-  level3: { label: "רכב שירות - רמה ג'", isCar: true, value: 1228 },
-  level4: { label: "רכב שירות - רמה ד'", isCar: true, value: 1403 },
+  level1: { label: "רכב שירות - רמה א'", isCar: true, value: 499 },
+  level2: { label: "רכב שירות - רמה ב'", isCar: true, value: 578 },
+  level3: { label: "רכב שירות - רמה ג'", isCar: true, value: 658 },
+  level4: { label: "רכב שירות - רמה ד'", isCar: true, value: 727 },
 };
 
 function ChildrenInput({ childrenAges, setChildrenAges, gender }) {
@@ -206,6 +207,7 @@ export default function SalaryCalculatorPage() {
   const [companyCar, setCompanyCar] = useState(false);
   const [companyCarGroup, setCompanyCarGroup] = useState(3);
   const [carEcoType, setCarEcoType] = useState('none');
+  const [ashalDays, setAshalDays] = useState(0);
   const [oncallCount, setOncall] = useState(0);
   const [premiumHours, setPremHours] = useState(0);
   const [premiumPct, setPremPct] = useState(25);
@@ -280,6 +282,7 @@ export default function SalaryCalculatorPage() {
           gender, hasDegree, partnerWorks, miluimDays,
           insuranceCost, vehicleRegFee, travelAllowance,
           companyCar, companyCarGroup, carEcoType,
+          ashalDays,
           oncallCount, premiumHours, premiumPct,
           recoveryYears, inclMaonot,
           localityName: inclLocality ? localityName : '',
@@ -322,6 +325,7 @@ export default function SalaryCalculatorPage() {
     gender, hasDegree, partnerWorks, miluimDays,
     insuranceCost, vehicleRegFee, travelAllowance,
     companyCar, companyCarGroup, carEcoType,
+    ashalDays,
     oncallCount, premiumHours, premiumPct,
     recoveryYears, inclMaonot, toggles, meta,
     inclLocality, localityName,
@@ -487,6 +491,29 @@ export default function SalaryCalculatorPage() {
               </div>
 
               {/* Overtime */}
+              {/* אש"ל — ימי עבודה מעל 10 שעות */}
+              <div className="mb-4">
+                <label className="text-sm font-semibold text-slate-700 mb-1 flex items-center gap-1.5">
+                  ימי עבודה מעל 10 שעות (אש״ל)
+                  <InfoTooltip title='אש"ל — דמי כלכלה יומיים' content={'21.1 ₪ ליום עבודה שנמשך מעל 10 שעות.\n\nאש"ל = אוכל, שתייה, לינה.\nנקבע בהסכמי שכר ואינו ממוסה.\n\nדוגמה: 15 ימים × 21.1 ₪ = 316.5 ₪/חודש\n\nניתן לעובדים המבצעים שעות עבודה ארוכות בהתאם לתפקיד ולאישור הממונה.'} />
+                </label>
+                <div className="flex items-center gap-3">
+                  <input type="range" min="0" max="22" value={ashalDays}
+                    onChange={e => setAshalDays(Number(e.target.value))}
+                    className="flex-1 h-3 rounded-full appearance-none cursor-pointer"
+                    style={sliderStyle(ashalDays, 22, '#10b981')} />
+                  <span className="w-16 text-center font-mono bg-gradient-to-br from-emerald-500 to-teal-600 text-white py-2 px-2 rounded-xl font-bold text-lg shadow">
+                    {ashalDays}
+                  </span>
+                </div>
+                {ashalDays > 0 && (
+                  <div className="mt-2 bg-emerald-50 border border-emerald-200 rounded-lg p-2 text-sm flex justify-between">
+                    <span className="text-slate-600">{ashalDays} ימים × 21.1 ₪:</span>
+                    <span className="font-bold text-emerald-700">+{(ashalDays * 21.1).toFixed(1)} ₪/חודש (פטור ממס)</span>
+                  </div>
+                )}
+              </div>
+
               {entitlements.overtime ? (
                 <div>
                   <label className="text-sm font-semibold text-slate-700 mb-1 flex items-center gap-1.5">
@@ -613,7 +640,7 @@ export default function SalaryCalculatorPage() {
               <SectionTitle icon={Ico.Car} title="רכב ונסיעות" subtitle="חבילת ניידות ורכב שירות" />
               <label className="text-sm font-semibold text-slate-700 mb-2 flex items-center gap-1.5">
                 סוג זכאות לרכב
-                <InfoTooltip title="רכב שירות" content={'ערך הרכב נוסף לברוטו ומשפיע על החישוב:\n\n• ללא רכב: 0 ₪\n• רמה ב׳: 1,022 ₪/חודש\n• רמה ג׳: 1,228 ₪/חודש\n• רמה ד׳: 1,403 ₪/חודש\n\nבכירים (568/569/557) מקבלים רכב צמוד — ראה "רכב צמוד" בהמשך.'} />
+                <InfoTooltip title="רכב שירות" content={'החזר הוצאות רכב שירות (500 ק״מ/חודש) — נטו לעובד:\n\n• רמה א׳: 499 ₪ (קבוע 159 + משתנה 340)\n• רמה ב׳: 578 ₪ (קבוע 238 + משתנה 340)\n• רמה ג׳: 658 ₪ (קבוע 318 + משתנה 340)\n• רמה ד׳: 727 ₪ (קבוע 387 + משתנה 340)\n\nהמעסיק מגלם את המס (גילום ברוטו) — העובד מקבל סכום נקי.\nאינו חלק מהברוטו — מוצג בשווי הכלכלי.\n\nבכירים (568/569/557) מקבלים רכב צמוד — ראה "רכב צמוד" בהמשך.'} />
               </label>
               <div className="grid grid-cols-2 gap-2 mb-4">
                 {Object.entries(CAR_PACKAGES_META).map(([k, p]) => (
@@ -626,7 +653,7 @@ export default function SalaryCalculatorPage() {
                     <div className={`text-xs font-bold ${carType === k ? 'text-white' : 'text-slate-800'}`}>{p.label}</div>
                     {p.isCar && (
                       <div className={`text-xs mt-0.5 ${carType === k ? 'opacity-80' : 'text-slate-500'}`}>
-                        חבילה: {p.value.toLocaleString()} ₪/חודש
+                        נטו: {p.value.toLocaleString()} ₪/חודש
                       </div>
                     )}
                   </button>
