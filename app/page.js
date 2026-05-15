@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import InfoTooltip from '../components/InfoTooltip';
 
 // נתוני יישובים מזכים (client-side — לתצוגה בלבד, חישוב נעשה בשרת)
 const LOCALITY_NAMES_CLIENT = [
@@ -98,10 +99,11 @@ const SectionTitle = ({ icon: Icon, title, subtitle }) => (
 );
 
 const CAR_PACKAGES_META = {
-  none:   { label: 'ללא רכב', isCar: false, value: 0 },
-  level2: { label: "רכב שירות - רמה ב'", isCar: true, value: 1022 },
-  level3: { label: "רכב שירות - רמה ג'", isCar: true, value: 1228 },
-  level4: { label: "רכב שירות - רמה ד'", isCar: true, value: 1403 },
+  none:   { label: 'ללא רכב', isCar: false },
+  level1: { label: "רכב שירות - רמה א'", isCar: true, grossFixed: 317, netFixed: 159, netVariable: 340 },
+  level2: { label: "רכב שירות - רמה ב'", isCar: true, grossFixed: 444, netFixed: 238, netVariable: 340 },
+  level3: { label: "רכב שירות - רמה ג'", isCar: true, grossFixed: 570, netFixed: 318, netVariable: 340 },
+  level4: { label: "רכב שירות - רמה ד'", isCar: true, grossFixed: 676, netFixed: 387, netVariable: 340 },
 };
 
 function ChildrenInput({ childrenAges, setChildrenAges, gender }) {
@@ -133,7 +135,10 @@ function ChildrenInput({ childrenAges, setChildrenAges, gender }) {
   return (
     <div className="mb-4">
       <div className="flex items-center justify-between mb-2">
-        <label className="text-sm font-semibold text-slate-700">ילדים — נקודות זיכוי לפי גיל</label>
+        <label className="text-sm font-semibold text-slate-700 inline-flex items-center gap-1.5">
+          ילדים — נקודות זיכוי לפי גיל
+          <InfoTooltip title="נקודות זיכוי לילדים" content={'כל נקודת זיכוי = 250 ₪/חודש הפחתה ממס הכנסה.\n\nנקודות לפי גיל (לאב/אם):\n• גיל 0: 2.5 נקודות\n• גיל 1–2: 4.5 נקודות\n• גיל 3: 3.5 נקודות\n• גיל 4–5: 2.5 נקודות\n• גיל 6–17: אמהות 2 / אבות 1\n• גיל 18: אמהות 0.5 / אבות 0\n\nנקודות בסיס (ללא ילדים):\n• גבר: 2.25 | אשה: 2.75\n• תואר אקדמי: +1 נקודה'} />
+        </label>
         <button onClick={() => setShowInput(!showInput)}
           className="text-xs bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg transition-all font-semibold">
           + הוסף ילד
@@ -202,6 +207,7 @@ export default function SalaryCalculatorPage() {
   const [companyCar, setCompanyCar] = useState(false);
   const [companyCarGroup, setCompanyCarGroup] = useState(3);
   const [carEcoType, setCarEcoType] = useState('none');
+  const [ashalDays, setAshalDays] = useState(0);
   const [oncallCount, setOncall] = useState(0);
   const [premiumHours, setPremHours] = useState(0);
   const [premiumPct, setPremPct] = useState(25);
@@ -276,6 +282,7 @@ export default function SalaryCalculatorPage() {
           gender, hasDegree, partnerWorks, miluimDays,
           insuranceCost, vehicleRegFee, travelAllowance,
           companyCar, companyCarGroup, carEcoType,
+          ashalDays,
           oncallCount, premiumHours, premiumPct,
           recoveryYears, inclMaonot,
           localityName: inclLocality ? localityName : '',
@@ -318,6 +325,7 @@ export default function SalaryCalculatorPage() {
     gender, hasDegree, partnerWorks, miluimDays,
     insuranceCost, vehicleRegFee, travelAllowance,
     companyCar, companyCarGroup, carEcoType,
+    ashalDays,
     oncallCount, premiumHours, premiumPct,
     recoveryYears, inclMaonot, toggles, meta,
     inclLocality, localityName,
@@ -430,7 +438,10 @@ export default function SalaryCalculatorPage() {
             <Card className="p-6">
               <SectionTitle icon={Ico.Brief} title="פרטי העסקה" subtitle="חוזה, דרגה ושעות עבודה" />
               <div className="mb-4">
-                <label className="text-sm font-semibold text-slate-700 mb-2 block">דרגה</label>
+                <label className="text-sm font-semibold text-slate-700 mb-2 flex items-center gap-1.5">
+                  דרגה
+                  <InfoTooltip title="איך עולים דרגות?" content={'📌 דרגה התחלתית\nנקבעת לפי השכלה + ניסיון רלוונטי קודם.\nכל שנת ניסיון מוכרת = דרגה אחת נוספת מעל המינימום.\n\nלדוגמה: עם 4 שנות ניסיון מוכר, תתחיל 4 דרגות מעל מינימום הדירוג.\n\n📈 קידום שוטף (פז״מ)\nכל 2 שנות עבודה = עלייה בדרגה אחת אוטומטית (ללא תלות בביצועים).\n\n⚡ פז״מ מקוצר\nעם הערכת ביצועים טובה, ניתן לעלות דרגה כל שנה — פי 2 מהקצב הרגיל.\n\nמגבלה: ניתן לנצל פז״מ מקוצר עד 3 שנים רצופות, ואז נדרש מרווח.\n\n🎓 תוספת תואר\nתואר ראשון: +1 נקודת זיכוי במס (לא דרגה)\nתואר שני / תעודת הוראה: עשויים להקנות דרגות נוספות בהתאם לדירוג.'} />
+                </label>
                 <div className="relative">
                   <select
                     value={gradeId || ''}
@@ -480,9 +491,35 @@ export default function SalaryCalculatorPage() {
               </div>
 
               {/* Overtime */}
+              {/* אש"ל — ימי עבודה מעל 10 שעות */}
+              <div className="mb-4">
+                <label className="text-sm font-semibold text-slate-700 mb-1 flex items-center gap-1.5">
+                  ימי עבודה מעל 10 שעות (אש״ל)
+                  <InfoTooltip title='אש"ל — דמי כלכלה יומיים' content={'21.1 ₪ ליום עבודה שנמשך מעל 10 שעות.\n\nאש"ל = אוכל, שתייה, לינה.\nנקבע בהסכמי שכר ואינו ממוסה.\n\nדוגמה: 15 ימים × 21.1 ₪ = 316.5 ₪/חודש\n\nניתן לעובדים המבצעים שעות עבודה ארוכות בהתאם לתפקיד ולאישור הממונה.'} />
+                </label>
+                <div className="flex items-center gap-3">
+                  <input type="range" min="0" max="22" value={ashalDays}
+                    onChange={e => setAshalDays(Number(e.target.value))}
+                    className="flex-1 h-3 rounded-full appearance-none cursor-pointer"
+                    style={sliderStyle(ashalDays, 22, '#10b981')} />
+                  <span className="w-16 text-center font-mono bg-gradient-to-br from-emerald-500 to-teal-600 text-white py-2 px-2 rounded-xl font-bold text-lg shadow">
+                    {ashalDays}
+                  </span>
+                </div>
+                {ashalDays > 0 && (
+                  <div className="mt-2 bg-emerald-50 border border-emerald-200 rounded-lg p-2 text-sm flex justify-between">
+                    <span className="text-slate-600">{ashalDays} ימים × 21.1 ₪:</span>
+                    <span className="font-bold text-emerald-700">+{(ashalDays * 21.1).toFixed(1)} ₪/חודש (פטור ממס)</span>
+                  </div>
+                )}
+              </div>
+
               {entitlements.overtime ? (
                 <div>
-                  <label className="text-sm font-semibold text-slate-700 mb-1 block">שעות נוספות בחודש</label>
+                  <label className="text-sm font-semibold text-slate-700 mb-1 flex items-center gap-1.5">
+                    שעות נוספות בחודש
+                    <InfoTooltip title="שעות נוספות" content={'2/3 מהשעות בתשלום של 125%, 1/3 בתשלום של 150%.\n\nתעריף שעתי = שכר יסוד ÷ 173.33\n\nדוגמה — 10 שעות נוספות:\n• 6.67 שע׳ × 125% = 8.33 שעות רגילות\n• 3.33 שע׳ × 150% = 5 שעות רגילות'} />
+                  </label>
                   {result && (
                     <p className="text-xs text-slate-500 mb-2">
                       שכר שעה: <strong>{result.hourlyRate?.toFixed(2)} ₪</strong>
@@ -527,7 +564,10 @@ export default function SalaryCalculatorPage() {
               <Card className="p-6">
                 <SectionTitle icon={Ico.Zap} title="כוננויות ופרמיה" subtitle="תשלומים מיוחדים" />
                 <div className="mb-4">
-                  <label className="text-sm font-semibold text-slate-700 mb-1 block">מספר כוננויות בחודש</label>
+                  <label className="text-sm font-semibold text-slate-700 mb-1 flex items-center gap-1.5">
+                    מספר כוננויות בחודש
+                    <InfoTooltip title="כוננויות" content={'תשלום עבור זמינות מחוץ לשעות עבודה רגילות.\n\nחישוב: מספר כוננויות × 5.33 שעות × תעריף שעתי\n\nתעריף שעתי = שכר יסוד ÷ 173.33\n\nזכאות לפי חוזה — בד״כ לתפקידי שטח, ביטחון ורפואה.'} />
+                  </label>
                   <div className="flex items-center gap-3">
                     <input type="range" min="0" max="30" value={oncallCount}
                       onChange={e => setOncall(Number(e.target.value))}
@@ -545,7 +585,10 @@ export default function SalaryCalculatorPage() {
                   )}
                 </div>
                 <div>
-                  <label className="text-sm font-semibold text-slate-700 mb-2 block">פרמיה</label>
+                  <label className="text-sm font-semibold text-slate-700 mb-2 flex items-center gap-1.5">
+                    פרמיה
+                    <InfoTooltip title="פרמיה" content={'תוספת שכר לעבודה בתנאים מיוחדים (לילה, שבת, תנאי שטח).\n\nחישוב: שעות פרמיה × (% פרמיה ÷ 100) × תעריף שעתי\n\nדוגמה: 10 שעות × 25% × 50 ₪ = 125 ₪/חודש.'} />
+                  </label>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="text-xs text-slate-500 mb-1 block">שעות פרמיה</label>
@@ -567,7 +610,10 @@ export default function SalaryCalculatorPage() {
             {/* Seniority */}
             <Card className="p-6">
               <SectionTitle icon={Ico.Coin} title="ותק והבראה" subtitle="חישוב ימי הבראה לפי שנות ותק" />
-              <label className="text-sm font-semibold text-slate-700 mb-1 block">שנות ותק</label>
+              <label className="text-sm font-semibold text-slate-700 mb-1 flex items-center gap-1.5">
+                שנות ותק
+                <InfoTooltip title="ותק והבראה" content={'שנות ותק משפיעות על:\n\n1. דמי הבראה:\n• 1–2 שנים: 5 ימים\n• 3 שנים: 6 ימים\n• 4–10: 7 ימים\n• 11–15: 8 ימים\n• 16–19: 9 ימים\n• 20+: 12 ימים\n\nשיעור יום הבראה: 374 ₪ (2025)'} />
+              </label>
               <div className="flex items-center gap-3 mb-2">
                 <input type="range" min="0" max="25" value={recoveryYears}
                   onChange={e => setRecYears(Number(e.target.value))}
@@ -592,7 +638,10 @@ export default function SalaryCalculatorPage() {
             {/* Vehicle */}
             <Card className="p-6">
               <SectionTitle icon={Ico.Car} title="רכב ונסיעות" subtitle="חבילת ניידות ורכב שירות" />
-              <label className="text-sm font-semibold text-slate-700 mb-2 block">סוג זכאות לרכב</label>
+              <label className="text-sm font-semibold text-slate-700 mb-2 flex items-center gap-1.5">
+                סוג זכאות לרכב
+                <InfoTooltip title="רכב שירות" content={'החזר הוצאות רכב שירות (500 ק״מ/חודש):\n\n📋 קוד 0700 — קבועות ברוטו (ממוסה):\n• רמה א׳: 317 ₪ | ב׳: 444 ₪ | ג׳: 570 ₪ | ד׳: 676 ₪\n\n💚 קוד 0750 — קבועות נטו (פטור):\n• רמה א׳: 159 ₪ | ב׳: 238 ₪ | ג׳: 318 ₪ | ד׳: 387 ₪\n\n💚 משתנות נטו — 500 ק״מ (פטור):\n• כל הרמות: 340 ₪\n\nסה"כ נטו לעובד: 499 / 578 / 658 / 727 ₪\nשווי כולל: 816 / 1,022 / 1,228 / 1,403 ₪\n\nבכירים (568/569/557) מקבלים רכב צמוד — ראה "רכב צמוד" בהמשך.'} />
+              </label>
               <div className="grid grid-cols-2 gap-2 mb-4">
                 {Object.entries(CAR_PACKAGES_META).map(([k, p]) => (
                   <button key={k} onClick={() => setCar(k)}
@@ -604,7 +653,7 @@ export default function SalaryCalculatorPage() {
                     <div className={`text-xs font-bold ${carType === k ? 'text-white' : 'text-slate-800'}`}>{p.label}</div>
                     {p.isCar && (
                       <div className={`text-xs mt-0.5 ${carType === k ? 'opacity-80' : 'text-slate-500'}`}>
-                        חבילה: {p.value.toLocaleString()} ₪/חודש
+                        ברוטו {p.grossFixed} + נטו {p.netFixed + p.netVariable} ₪
                       </div>
                     )}
                   </button>
@@ -613,7 +662,10 @@ export default function SalaryCalculatorPage() {
 
               {/* Travel allowance */}
               <div className="mb-4">
-                <label className="text-sm font-semibold text-slate-700 mb-2 block">קצובת נסיעה חודשית</label>
+                <label className="text-sm font-semibold text-slate-700 mb-2 flex items-center gap-1.5">
+                  קצובת נסיעה חודשית
+                  <InfoTooltip title="קצובת נסיעה" content={'פיצוי על הוצאות נסיעה לעבודה — אינו ממוסה:\n\n• מרחוק (מעל 30 ק״מ): 684 ₪\n• בינוני (15–30 ק״מ): 464 ₪\n• מינימום (עד 15 ק״מ): 323 ₪\n\nבכירים עם רכב צמוד אינם זכאים לקצובת נסיעה.'} />
+                </label>
                 <div className="grid grid-cols-3 gap-2">
                   {[{ val: 684, label: 'מרחוק', sub: '684 ₪' }, { val: 464, label: 'בינוני', sub: '464 ₪' }, { val: 323, label: 'מינימום', sub: '323 ₪' }].map(opt => (
                     <button key={opt.val} onClick={() => setTravel(opt.val)}
@@ -638,8 +690,11 @@ export default function SalaryCalculatorPage() {
                     {companyCar && <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
                   </div>
                   <div className="flex-1">
-                    <div className="text-sm font-semibold text-slate-800">רכב צמוד</div>
-                    <div className="text-xs text-slate-500">לבכירים בלבד — זקיפת הטבה נוספת לברוטו</div>
+                    <div className="text-sm font-semibold text-slate-800 inline-flex items-center gap-1.5">
+                      רכב צמוד
+                      <InfoTooltip title="רכב צמוד — שווי שימוש" content={'שווי שימוש חודשי לפי תקנות מס הכנסה:\n• קבוצה 3: 4,390 ₪\n• קבוצה 4: 5,260 ₪\n• קבוצה 5: 7,280 ₪\n\nמחויב במס אך לא חלק מהברוטו — מוסיף לחבות המס בלבד.\n\nהנחות לרכב ירוק:\n• היברידי: −580 ₪\n• חשמלי: −1,380 ₪'} />
+                    </div>
+                    <div className="text-xs text-slate-500">מחויב במס בלבד — אינו חלק מהברוטו</div>
                   </div>
                 </label>
                 {companyCar && (
@@ -659,7 +714,10 @@ export default function SalaryCalculatorPage() {
                       ))}
                     </div>
                     <div className="mt-3">
-                      <div className="text-xs font-semibold text-slate-600 mb-2">סוג דלק (הנחת תמריץ ירוק):</div>
+                      <div className="text-xs font-semibold text-slate-600 mb-2 flex items-center gap-1.5">
+                      סוג דלק (הנחת תמריץ ירוק)
+                      <InfoTooltip title="הנחה לרכב ירוק" content={'תמריץ ממשלתי להפחתת זיהום — מופחת משווי השימוש לפני חישוב המס:\n\n• רכב רגיל (בנזין/דיזל): ללא הנחה\n• היברידי: −580 ₪/חודש\n• חשמלי: −1,380 ₪/חודש\n\nהחיסכון במס: ×שיעור המדרגה השולית שלך.'} />
+                    </div>
                       <div className="grid grid-cols-3 gap-2">
                         {[
                           { key: 'none',     label: 'רגיל',     sub: 'ללא הנחה' },
