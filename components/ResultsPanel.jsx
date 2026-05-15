@@ -116,14 +116,25 @@ export default function ResultsPanel({ result, contract, showAnnual, setShowAnnu
             title: 'קצובת נסיעה',
             content: 'פיצוי חודשי על הוצאות נסיעה לעבודה — אינו ממוסה:\n\n• מרחוק (מעל 30 ק״מ): 684 ₪/חודש\n• בינוני (15–30 ק״מ): 464 ₪/חודש\n• מינימום (עד 15 ק״מ): 323 ₪/חודש\n\nבכירים עם רכב צמוד אינם זכאים לקצובת נסיעה.'
           }} />}
-          {R.carNetValue > 0 && (
+          {R.carVariable > 0 && (
             <ResultRow
-              label="החזר הוצאות רכב שירות"
-              value={R.carNetValue}
-              subValue="פטור ממס — אינו חלק מהברוטו"
+              label="החזר נסיעות רכב שירות (משתנה)"
+              value={R.carVariable}
+              subValue="340 ₪ — החזר ק״מ חודשי, ממוסה"
               info={{
-                title: 'החזר הוצאות רכב שירות',
-                content: 'החזר חודשי עבור שימוש ברכב פרטי לצרכי עבודה (500 ק״מ).\nפטור ממס — מוסף ישירות לנטו.\n\n• רמה א׳: 499 ₪ (קבוע 159 + משתנה 340)\n• רמה ב׳: 578 ₪ (קבוע 238 + משתנה 340)\n• רמה ג׳: 658 ₪ (קבוע 318 + משתנה 340)\n• רמה ד׳: 727 ₪ (קבוע 387 + משתנה 340)'
+                title: 'החזר נסיעות רכב שירות — חלק משתנה',
+                content: 'החזר עבור 500 ק״מ נסיעות עבודה בחודש.\n\nסכום קבוע: 340 ₪ לכל הרמות.\nחלק זה נכנס לברוטו ומחויב במס הכנסה וביטוח לאומי.'
+              }}
+            />
+          )}
+          {R.carFixed > 0 && (
+            <ResultRow
+              label="החזר רכב שירות (קבוע, פטור ממס)"
+              value={R.carFixed}
+              subValue="אינו חלק מהברוטו — מוסף ישירות לנטו"
+              info={{
+                title: 'החזר הוצאות רכב שירות — חלק קבוע',
+                content: 'החזר הוצאות קבועות אחזקת הרכב — פטור ממס.\nמוסף ישירות לנטו, אינו נכנס לברוטו.\n\nסכומים לפי רמה:\n• רמה א׳: 159 ₪\n• רמה ב׳: 238 ₪\n• רמה ג׳: 318 ₪\n• רמה ד׳: 387 ₪'
               }}
             />
           )}
@@ -207,7 +218,7 @@ export default function ResultsPanel({ result, contract, showAnnual, setShowAnnu
               label="נטו לתשלום"
               value={R.netSalary}
               highlight
-              subValue={R.carNetValue > 0 ? `כולל ${Math.round(R.carNetValue).toLocaleString('he-IL')} ₪ החזר רכב פטור ממס` : null}
+              subValue={R.carFixed > 0 ? `כולל ${Math.round(R.carFixed).toLocaleString('he-IL')} ₪ החזר קבוע פטור ממס` : null}
             />
           </div>
         </div>
