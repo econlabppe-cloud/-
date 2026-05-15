@@ -116,14 +116,14 @@ export default function ResultsPanel({ result, contract, showAnnual, setShowAnnu
             title: 'קצובת נסיעה',
             content: 'פיצוי חודשי על הוצאות נסיעה לעבודה — אינו ממוסה:\n\n• מרחוק (מעל 30 ק״מ): 684 ₪/חודש\n• בינוני (15–30 ק״מ): 464 ₪/חודש\n• מינימום (עד 15 ק״מ): 323 ₪/חודש\n\nבכירים עם רכב צמוד אינם זכאים לקצובת נסיעה.'
           }} />}
-          {R.carGrossedUp > 0 && (
+          {R.carNetValue > 0 && (
             <ResultRow
-              label="החזר רכב שירות (מגולם)"
-              value={R.carGrossedUp}
-              subValue={`נטו לעובד לאחר מס: ${Math.round(R.carNetValue).toLocaleString('he-IL')} ₪ | גילום ${Math.round(R.carMarginalRate * 100)}% מס שולי`}
+              label="החזר הוצאות רכב שירות"
+              value={R.carNetValue}
+              subValue="פטור ממס — אינו חלק מהברוטו"
               info={{
-                title: 'החזר הוצאות רכב שירות — גילום מס',
-                content: `החזר עבור שימוש ברכב פרטי לצרכי עבודה (500 ק״מ/חודש).\n\nהסכומים בחבילה הם נטו לעובד. המעסיק מגלם לפי המס השולי:\nגלום = נטו ÷ (1 − שיעור מס שולי)\n\nדוגמה: 578 ₪ נטו בשיעור 35% → 578 ÷ 0.65 = 889 ₪ גלום\n\nהסכום הגלום נכנס לברוטו, מחויב במס, והעובד מקבל את הנטו.\n\nסכומי נטו:\n• רמה א׳: 499 ₪ (קבוע 159 + משתנה 340)\n• רמה ב׳: 578 ₪ (קבוע 238 + משתנה 340)\n• רמה ג׳: 658 ₪ (קבוע 318 + משתנה 340)\n• רמה ד׳: 727 ₪ (קבוע 387 + משתנה 340)`
+                title: 'החזר הוצאות רכב שירות',
+                content: 'החזר חודשי עבור שימוש ברכב פרטי לצרכי עבודה (500 ק״מ).\nפטור ממס — מוסף ישירות לנטו.\n\n• רמה א׳: 499 ₪ (קבוע 159 + משתנה 340)\n• רמה ב׳: 578 ₪ (קבוע 238 + משתנה 340)\n• רמה ג׳: 658 ₪ (קבוע 318 + משתנה 340)\n• רמה ד׳: 727 ₪ (קבוע 387 + משתנה 340)'
               }}
             />
           )}
@@ -161,7 +161,7 @@ export default function ResultsPanel({ result, contract, showAnnual, setShowAnnu
           <div className="border-t border-slate-200 mt-2 pt-2">
             <ResultRow label="ברוטו שכר" value={R.totalGross} highlight info={{
               title: 'ברוטו שכר',
-              content: 'סך כל רכיבי השכר: שכר יסוד + שעות נוספות + קצובת נסיעה + החזר רכב (מגולם) + כוננויות + פרמיה + מעונות.\n\nהחזר הוצאות הרכב מגיע מגולם (gross-up) — הסכום בברוטו גבוה מהנטו לעובד, כך שלאחר מס יישאר הסכום הנקי המובטח.\n\nאש"ל אינו חלק מהברוטו (פטור ממס).'
+              content: 'סך כל רכיבי השכר הממוסים: שכר יסוד + שעות נוספות + קצובת נסיעה + כוננויות + פרמיה + מעונות.\n\nלא כולל:\n• החזר הוצאות רכב שירות (פטור ממס)\n• אש"ל (פטור ממס)\n• שווי שימוש ברכב צמוד (ממוסה בנפרד)'
             }} />
             {R.companyCarImputationNet > 0 && (
               <ResultRow label="ברוטו לחישוב מס" value={R.taxableGross} subValue="כולל שווי שימוש ברכב" info={{
@@ -203,7 +203,12 @@ export default function ResultsPanel({ result, contract, showAnnual, setShowAnnu
           </div>
 
           <div className="border-t-2 border-emerald-300 mt-3 pt-3">
-            <ResultRow label="שכר נטו לתשלום" value={R.netSalary} highlight />
+            <ResultRow
+              label="נטו לתשלום"
+              value={R.netSalary}
+              highlight
+              subValue={R.carNetValue > 0 ? `כולל ${Math.round(R.carNetValue).toLocaleString('he-IL')} ₪ החזר רכב פטור ממס` : null}
+            />
           </div>
         </div>
 
