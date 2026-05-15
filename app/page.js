@@ -99,11 +99,11 @@ const SectionTitle = ({ icon: Icon, title, subtitle }) => (
 );
 
 const CAR_PACKAGES_META = {
-  none:   { label: 'ללא רכב', isCar: false, value: 0 },
-  level1: { label: "רכב שירות - רמה א'", isCar: true, value: 499 },
-  level2: { label: "רכב שירות - רמה ב'", isCar: true, value: 578 },
-  level3: { label: "רכב שירות - רמה ג'", isCar: true, value: 658 },
-  level4: { label: "רכב שירות - רמה ד'", isCar: true, value: 727 },
+  none:   { label: 'ללא רכב', isCar: false },
+  level1: { label: "רכב שירות - רמה א'", isCar: true, grossFixed: 317, netFixed: 159, netVariable: 340 },
+  level2: { label: "רכב שירות - רמה ב'", isCar: true, grossFixed: 444, netFixed: 238, netVariable: 340 },
+  level3: { label: "רכב שירות - רמה ג'", isCar: true, grossFixed: 570, netFixed: 318, netVariable: 340 },
+  level4: { label: "רכב שירות - רמה ד'", isCar: true, grossFixed: 676, netFixed: 387, netVariable: 340 },
 };
 
 function ChildrenInput({ childrenAges, setChildrenAges, gender }) {
@@ -640,7 +640,7 @@ export default function SalaryCalculatorPage() {
               <SectionTitle icon={Ico.Car} title="רכב ונסיעות" subtitle="חבילת ניידות ורכב שירות" />
               <label className="text-sm font-semibold text-slate-700 mb-2 flex items-center gap-1.5">
                 סוג זכאות לרכב
-                <InfoTooltip title="רכב שירות" content={'החזר הוצאות רכב שירות (500 ק״מ/חודש):\n\nחלק משתנה (340 ₪ לכל הרמות) — ממוסה, נכנס לברוטו.\nחלק קבוע — פטור ממס, מוסף ישירות לנטו.\n\nסה"כ לפי רמה:\n• רמה א׳: 499 ₪ (קבוע 159 + משתנה 340)\n• רמה ב׳: 578 ₪ (קבוע 238 + משתנה 340)\n• רמה ג׳: 658 ₪ (קבוע 318 + משתנה 340)\n• רמה ד׳: 727 ₪ (קבוע 387 + משתנה 340)\n\nבכירים (568/569/557) מקבלים רכב צמוד — ראה "רכב צמוד" בהמשך.'} />
+                <InfoTooltip title="רכב שירות" content={'החזר הוצאות רכב שירות (500 ק״מ/חודש):\n\n📋 קוד 0700 — קבועות ברוטו (ממוסה):\n• רמה א׳: 317 ₪ | ב׳: 444 ₪ | ג׳: 570 ₪ | ד׳: 676 ₪\n\n💚 קוד 0750 — קבועות נטו (פטור):\n• רמה א׳: 159 ₪ | ב׳: 238 ₪ | ג׳: 318 ₪ | ד׳: 387 ₪\n\n💚 משתנות נטו — 500 ק״מ (פטור):\n• כל הרמות: 340 ₪\n\nסה"כ נטו לעובד: 499 / 578 / 658 / 727 ₪\nשווי כולל: 816 / 1,022 / 1,228 / 1,403 ₪\n\nבכירים (568/569/557) מקבלים רכב צמוד — ראה "רכב צמוד" בהמשך.'} />
               </label>
               <div className="grid grid-cols-2 gap-2 mb-4">
                 {Object.entries(CAR_PACKAGES_META).map(([k, p]) => (
@@ -653,7 +653,7 @@ export default function SalaryCalculatorPage() {
                     <div className={`text-xs font-bold ${carType === k ? 'text-white' : 'text-slate-800'}`}>{p.label}</div>
                     {p.isCar && (
                       <div className={`text-xs mt-0.5 ${carType === k ? 'opacity-80' : 'text-slate-500'}`}>
-                        נטו: {p.value.toLocaleString()} ₪/חודש
+                        ברוטו {p.grossFixed} + נטו {p.netFixed + p.netVariable} ₪
                       </div>
                     )}
                   </button>

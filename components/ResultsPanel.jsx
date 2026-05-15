@@ -116,25 +116,25 @@ export default function ResultsPanel({ result, contract, showAnnual, setShowAnnu
             title: 'קצובת נסיעה',
             content: 'פיצוי חודשי על הוצאות נסיעה לעבודה — אינו ממוסה:\n\n• מרחוק (מעל 30 ק״מ): 684 ₪/חודש\n• בינוני (15–30 ק״מ): 464 ₪/חודש\n• מינימום (עד 15 ק״מ): 323 ₪/חודש\n\nבכירים עם רכב צמוד אינם זכאים לקצובת נסיעה.'
           }} />}
-          {R.carVariable > 0 && (
+          {R.carGrossFixed > 0 && (
             <ResultRow
-              label="החזר נסיעות רכב שירות (משתנה)"
-              value={R.carVariable}
-              subValue="340 ₪ — החזר ק״מ חודשי, ממוסה"
+              label="קבועות ברוטו רכב שירות (0700)"
+              value={R.carGrossFixed}
+              subValue="נכנס לבסיס המס — ממוסה"
               info={{
-                title: 'החזר נסיעות רכב שירות — חלק משתנה',
-                content: 'החזר עבור 500 ק״מ נסיעות עבודה בחודש.\n\nסכום קבוע: 340 ₪ לכל הרמות.\nחלק זה נכנס לברוטו ומחויב במס הכנסה וביטוח לאומי.'
+                title: 'קבועות ברוטו — קוד 0700',
+                content: 'החזר הוצאות קבועות ברוטו — נכנס לבסיס מס הכנסה וביטוח לאומי.\n\nסכומים לפי רמה:\n• רמה א׳: 317 ₪\n• רמה ב׳: 444 ₪\n• רמה ג׳: 570 ₪\n• רמה ד׳: 676 ₪'
               }}
             />
           )}
-          {R.carFixed > 0 && (
+          {R.carNet > 0 && (
             <ResultRow
-              label="החזר רכב שירות (קבוע, פטור ממס)"
-              value={R.carFixed}
-              subValue="אינו חלק מהברוטו — מוסף ישירות לנטו"
+              label="החזר רכב שירות — פטור ממס (0750 + משתנות)"
+              value={R.carNet}
+              subValue={`קבועות נטו ${Math.round(R.carNetFixed).toLocaleString('he-IL')} ₪ + משתנות ${Math.round(R.carNetVariable).toLocaleString('he-IL')} ₪ — מוסף לנטו`}
               info={{
-                title: 'החזר הוצאות רכב שירות — חלק קבוע',
-                content: 'החזר הוצאות קבועות אחזקת הרכב — פטור ממס.\nמוסף ישירות לנטו, אינו נכנס לברוטו.\n\nסכומים לפי רמה:\n• רמה א׳: 159 ₪\n• רמה ב׳: 238 ₪\n• רמה ג׳: 318 ₪\n• רמה ד׳: 387 ₪'
+                title: 'החזר רכב שירות — רכיבי נטו',
+                content: 'שני רכיבים פטורים ממס המוסרפים ישירות לנטו:\n\nקבועות נטו (0750):\n• רמה א׳: 159 ₪ | ב׳: 238 ₪ | ג׳: 318 ₪ | ד׳: 387 ₪\n\nמשתנות נטו (500 ק״מ): 340 ₪ — זהה לכל הרמות\n\nשניהם אינם נכנסים לברוטו ואינם ממוסים.'
               }}
             />
           )}
@@ -218,7 +218,7 @@ export default function ResultsPanel({ result, contract, showAnnual, setShowAnnu
               label="נטו לתשלום"
               value={R.netSalary}
               highlight
-              subValue={R.carFixed > 0 ? `כולל ${Math.round(R.carFixed).toLocaleString('he-IL')} ₪ החזר קבוע פטור ממס` : null}
+              subValue={R.carNet > 0 ? `כולל ${Math.round(R.carNet).toLocaleString('he-IL')} ₪ החזר רכב פטור ממס` : null}
             />
           </div>
         </div>
